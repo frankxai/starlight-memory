@@ -20,7 +20,7 @@
     }
   },
   "scripts": {
-    "test": "node --import tsx --test test/router.test.ts",
+    "test": "node --import tsx --test test/*.test.ts",
     "lint": "tsc --noEmit",
     "build": "tsc",
     "verify": "npm run test && npm run lint && npm run build"

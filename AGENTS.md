@@ -28,7 +28,9 @@ npm run verify
 - `src/types.ts` — provider-neutral SIS memory record and policy types.
 - `src/router.ts` — privacy-aware provider routing.
 - `src/resources.ts` — provider resource profiles and singleton/shared-daemon constraints.
-- `test/router.test.ts` — regression tests for routing and resource doctrine.
+- `src/local-core-provider.ts` — zero-dependency in-memory `local_core` provider for tests/dev and hot-path API proof.
+- `test/*.test.ts` — regression tests for routing, resource doctrine, tenant isolation, recall, and forget behavior.
+- `docs/ADAPTER_CONTRACT.md` — adapter implementation contract.
 - `docs/strategic/sis-memory-provider-strategy-2026-06-18.md` — strategic architecture.
 
 Built on SIP — sovereign memory router.

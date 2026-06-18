@@ -39,6 +39,14 @@ Routes a SIS memory record through the canonical local write plus optional mirro
 
 Returns singleton/shared-daemon requirements so provider adapters do not accidentally spawn one heavyweight runtime per agent.
 
+### `InMemoryLocalCoreProvider`
+
+A zero-dependency local provider that implements the adapter contract for tests, development, and hot-path API proof. It enforces tenant isolation, explicit forget, and lexical recall without external services.
+
+## Adapter contract
+
+See [`docs/ADAPTER_CONTRACT.md`](docs/ADAPTER_CONTRACT.md).
+
 ## Development
 
 ```bash
