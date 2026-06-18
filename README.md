@@ -43,6 +43,10 @@ Returns singleton/shared-daemon requirements so provider adapters do not acciden
 
 A zero-dependency local provider that implements the adapter contract for tests, development, and hot-path API proof. It enforces tenant isolation, explicit forget, and lexical recall without external services.
 
+### `Mem0RemoteProvider`
+
+A remote-only, client-injected Mem0 adapter. It queues writes, flushes batches, blocks `secret` / `regulated` records by default, and maps Mem0 result IDs back into SIS `provider_shadow_refs` without making Mem0 canonical.
+
 ## Adapter contract
 
 See [`docs/ADAPTER_CONTRACT.md`](docs/ADAPTER_CONTRACT.md).

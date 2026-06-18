@@ -29,7 +29,8 @@ npm run verify
 - `src/router.ts` — privacy-aware provider routing.
 - `src/resources.ts` — provider resource profiles and singleton/shared-daemon constraints.
 - `src/local-core-provider.ts` — zero-dependency in-memory `local_core` provider for tests/dev and hot-path API proof.
-- `test/*.test.ts` — regression tests for routing, resource doctrine, tenant isolation, recall, and forget behavior.
+- `src/mem0-remote-provider.ts` — remote-only Mem0 adapter with batched writes and privacy blocking.
+- `test/*.test.ts` — regression tests for routing, resource doctrine, tenant isolation, recall, forget behavior, and Mem0 remote-only batching.
 - `docs/ADAPTER_CONTRACT.md` — adapter implementation contract.
 - `docs/strategic/sis-memory-provider-strategy-2026-06-18.md` — strategic architecture.
 

@@ -45,11 +45,11 @@ interface MemoryProvider {
 ## Current concrete provider
 
 - `InMemoryLocalCoreProvider` — test-only/dev-friendly local_core implementation. It proves the API and gives consumers a zero-dependency hot-path provider.
+- `Mem0RemoteProvider` — remote-only, client-injected Mem0 adapter. It buffers writes, flushes in batches, blocks secret/regulated records by default, and maps Mem0 IDs back into SIS provider-shadow refs.
 
 ## First external adapters to add
 
-1. `mem0` remote API adapter — batched writes, TTL recall cache, no local runtime spawn.
-2. `hindsight` graph projection adapter — cloud or one shared local daemon.
-3. `supermemory` session/document ingest adapter — enterprise connector route only.
+1. `hindsight` graph projection adapter — cloud or one shared local daemon.
+2. `supermemory` session/document ingest adapter — enterprise connector route only.
 
 Built on SIP — provider adapter contract.
