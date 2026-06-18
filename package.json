@@ -17,6 +17,26 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js"
+    },
+    "./resources": {
+      "types": "./dist/resources.d.ts",
+      "import": "./dist/resources.js"
+    },
+    "./router": {
+      "types": "./dist/router.d.ts",
+      "import": "./dist/router.js"
+    },
+    "./providers/local-core": {
+      "types": "./dist/local-core-provider.d.ts",
+      "import": "./dist/local-core-provider.js"
+    },
+    "./providers/mem0": {
+      "types": "./dist/mem0-remote-provider.d.ts",
+      "import": "./dist/mem0-remote-provider.js"
     }
   },
   "scripts": {

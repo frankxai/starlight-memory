@@ -70,3 +70,26 @@ See [`docs/strategic/sis-memory-provider-strategy-2026-06-18.md`](docs/strategic
 This repository is created alongside the in-SIS implementation. Short term, SIS consumes/hosts the live operational version under `src/memory-provider/`. Long term, this repo becomes the shared package once the interface survives real adapters and evaluation.
 
 Built on SIP — sovereign memory router.
+
+## Quick usage
+
+```ts
+import {
+  InMemoryLocalCoreProvider,
+  Mem0RemoteProvider,
+  type SISMemoryRecord,
+} from '@starlight-intelligence/memory';
+
+// Local core (sovereign, hot path)
+const local = new InMemoryLocalCoreProvider();
+await local.remember(myRecord);
+
+// Mem0 remote (batched accelerator)
+const mem0 = new Mem0RemoteProvider({ client: myMem0Client });
+await mem0.remember(record);
+await mem0.flush(); // explicit batch
+
+// Fan-in safe: dozens of agents route through one instance
+```
+
+See tests for full patterns and the fan-in benchmark.

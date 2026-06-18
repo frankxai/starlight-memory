@@ -53,3 +53,10 @@ interface MemoryProvider {
 2. `supermemory` session/document ingest adapter — enterprise connector route only.
 
 Built on SIP — provider adapter contract.
+
+## Evolution notes (2026-06-18)
+
+- Added Mem0RemoteProvider (remote_api, batched, privacy-first).
+- Added fan-in benchmark proving 50 concurrent agent simulation with single lightweight provider.
+- Evolved package exports for subpath imports.
+- All adapters must still satisfy the resource doctrine in resources.ts.
