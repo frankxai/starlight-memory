@@ -1,0 +1,47 @@
+{
+  "name": "@starlight-intelligence/memory",
+  "version": "0.1.0",
+  "description": "Sovereign memory provider contract, router, and resource policy for Starlight Intelligence System.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/frankxai/starlight-memory.git"
+  },
+  "bugs": {
+    "url": "https://github.com/frankxai/starlight-memory/issues"
+  },
+  "homepage": "https://github.com/frankxai/starlight-memory#readme",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "test": "node --import tsx --test test/router.test.ts",
+    "lint": "tsc --noEmit",
+    "build": "tsc",
+    "verify": "npm run test && npm run lint && npm run build"
+  },
+  "keywords": [
+    "ai-memory",
+    "agents",
+    "context-engineering",
+    "memory-provider",
+    "mcp",
+    "sovereign-memory",
+    "starlight"
+  ],
+  "author": "FrankX <frank@frankx.ai>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^25.2.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
