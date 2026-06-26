@@ -1,5 +1,9 @@
 # Starlight Memory
 
+<p align="center">
+  <img src=".github/hero.svg" alt="Starlight Memory: sovereign local-core memory routing for AI agents" width="100%">
+</p>
+
 Sovereign memory provider contract, router, and resource policy for the Starlight Intelligence System.
 
 [![CI](https://github.com/frankxai/starlight-memory/actions/workflows/ci.yml/badge.svg)](https://github.com/frankxai/starlight-memory/actions/workflows/ci.yml)

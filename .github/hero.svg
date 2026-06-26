@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+  <title id="title">Starlight Memory</title>
+  <desc id="desc">A sovereign memory router: local core first, privacy-aware policy, and optional provider adapters.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#05060A"/>
+      <stop offset="0.72" stop-color="#080C16"/>
+      <stop offset="1" stop-color="#0D1625"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#6EA8FE"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="360" fill="url(#bg)"/>
+  <g opacity="0.16" stroke="#6EA8FE" stroke-width="1">
+    <path d="M80 72H1120M80 120H1120M80 168H1120M80 216H1120M80 264H1120"/>
+    <path d="M140 48V312M250 48V312M360 48V312M470 48V312M580 48V312M690 48V312M800 48V312M910 48V312M1020 48V312"/>
+  </g>
+  <g font-family="Inter, Geist, Arial, Helvetica, sans-serif">
+    <text x="72" y="82" fill="#6EA8FE" font-size="14" font-weight="800" letter-spacing="2">STL / SOVEREIGN MEMORY ROUTER</text>
+    <text x="72" y="145" fill="#F1F3F9" font-size="50" font-weight="850">Starlight Memory</text>
+    <text x="74" y="187" fill="#AEB7D8" font-size="20" font-weight="500">Provider contract, routing policy, and resource discipline</text>
+    <text x="74" y="216" fill="#AEB7D8" font-size="20" font-weight="500">for agent memory that stays local-core first.</text>
+
+    <g transform="translate(72 262)">
+      <rect width="118" height="34" rx="17" fill="#0D1625" stroke="#6EA8FE" stroke-opacity="0.55"/>
+      <text x="20" y="23" fill="#F1F3F9" font-size="13" font-weight="750">local_core</text>
+      <rect x="132" width="104" height="34" rx="17" fill="#0D1625" stroke="#22D3EE" stroke-opacity="0.55"/>
+      <text x="154" y="23" fill="#F1F3F9" font-size="13" font-weight="750">routing</text>
+      <rect x="250" width="92" height="34" rx="17" fill="#0D1625" stroke="#F5B84B" stroke-opacity="0.7"/>
+      <text x="272" y="23" fill="#F1F3F9" font-size="13" font-weight="750">policy</text>
+    </g>
+
+    <g transform="translate(590 64)">
+      <rect width="500" height="232" rx="20" fill="#0A0F1D" stroke="#6EA8FE" stroke-opacity="0.42"/>
+      <rect x="28" y="28" width="160" height="58" rx="12" fill="#05060A" stroke="#F5B84B" stroke-opacity="0.72"/>
+      <text x="50" y="64" fill="#F1F3F9" font-size="18" font-weight="800">local_core</text>
+      <rect x="28" y="146" width="160" height="58" rx="12" fill="#05060A" stroke="#6EA8FE" stroke-opacity="0.62"/>
+      <text x="55" y="182" fill="#F1F3F9" font-size="18" font-weight="800">SIS record</text>
+      <rect x="300" y="40" width="154" height="42" rx="11" fill="#05060A" stroke="#22D3EE" stroke-opacity="0.58"/>
+      <text x="333" y="67" fill="#F1F3F9" font-size="15" font-weight="750">mem0 mirror</text>
+      <rect x="300" y="104" width="154" height="42" rx="11" fill="#05060A" stroke="#22D3EE" stroke-opacity="0.42"/>
+      <text x="333" y="131" fill="#F1F3F9" font-size="15" font-weight="750">graph index</text>
+      <rect x="300" y="168" width="154" height="42" rx="11" fill="#05060A" stroke="#22D3EE" stroke-opacity="0.42"/>
+      <text x="327" y="195" fill="#F1F3F9" font-size="15" font-weight="750">connector ingest</text>
+      <path d="M188 57H264" stroke="url(#line)" stroke-width="3"/>
+      <path d="M264 57V189H300" stroke="url(#line)" stroke-width="3" fill="none" opacity="0.8"/>
+      <path d="M188 175H246V125H300" stroke="#6EA8FE" stroke-width="3" fill="none" opacity="0.65"/>
+      <circle cx="264" cy="57" r="5" fill="#22D3EE"/>
+      <circle cx="246" cy="125" r="5" fill="#6EA8FE"/>
+      <text x="32" y="118" fill="#AEB7D8" font-size="13" font-weight="700">canonical write first</text>
+      <text x="308" y="20" fill="#AEB7D8" font-size="13" font-weight="700">optional accelerators</text>
+    </g>
+  </g>
+</svg>
