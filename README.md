@@ -1,8 +1,35 @@
 # Starlight Memory
 
+<p align="center">
+  <img src=".github/hero.svg" alt="Starlight Memory: sovereign local-core memory routing for AI agents" width="100%">
+</p>
+
 Sovereign memory provider contract, router, and resource policy for the Starlight Intelligence System.
 
+[![CI](https://github.com/frankxai/starlight-memory/actions/workflows/ci.yml/badge.svg)](https://github.com/frankxai/starlight-memory/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-2563eb)](package.json)
+[![Built on SIP](https://img.shields.io/badge/built%20on-SIP-7c3aed)](https://github.com/frankxai/Starlight-Intelligence-System)
+[![Memory](https://img.shields.io/badge/memory-local%20core%20first-0f766e)](docs/ADAPTER_CONTRACT.md)
+
 This repo is the extraction point for the memory layer, but SIS remains the canonical control plane. The package is intentionally small right now: it locks the provider-neutral schema, routing policy, and resource constraints before heavier adapters are added.
+
+## 90-second start
+
+Use this repo when an agent or application needs the SIS memory contract, privacy-aware routing policy, or a lightweight local provider for tests and development.
+
+```bash
+git clone https://github.com/frankxai/starlight-memory.git
+cd starlight-memory
+npm ci
+npm run verify
+```
+
+Start with:
+
+- [`docs/ADAPTER_CONTRACT.md`](docs/ADAPTER_CONTRACT.md) for provider requirements.
+- [`src/types.ts`](src/types.ts) for the canonical SIS memory record and policy types.
+- [`src/router.ts`](src/router.ts) for routing behavior.
+- [`src/resources.ts`](src/resources.ts) for singleton/shared-daemon constraints.
 
 ## Core doctrine
 
