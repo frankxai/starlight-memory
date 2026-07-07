@@ -13,6 +13,14 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "starlight-memory": "bin/starlight-memory.mjs"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "starlight-memory.config.example.json"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -43,7 +51,14 @@
     "test": "node --import tsx --test test/*.test.ts",
     "lint": "tsc --noEmit",
     "build": "tsc",
-    "verify": "npm run test && npm run lint && npm run build"
+    "verify": "npm run test && npm run lint && npm run build",
+    "mcp": "node bin/starlight-memory.mjs mcp serve"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "optionalDependencies": {
+    "@huggingface/transformers": "^3.0.0"
   },
   "keywords": [
     "ai-memory",
