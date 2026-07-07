@@ -39,6 +39,27 @@ Start with:
 - **Cloud writes are derived/mirrored by policy.** Sensitive memory stays local unless explicit tenant policy allows otherwise.
 - **Evaluation decides defaults.** Providers earn default status through recall quality, latency, contradiction rate, cost, privacy, and exportability.
 
+## Cross-machine sync CLI (`starlight-memory`)
+
+A zero-dependency, cross-OS CLI that turns a git repo into a **memory vault** and links your agent's file-based memory dirs into it — so memory is versioned, backed up, and synced across every machine you work on.
+
+Portable by construction:
+
+- **Linking** uses `fs.symlink(type: 'junction')` on Windows (no admin) and `'dir'` symlinks on macOS/Linux — one code path, every OS.
+- **Paths are computed per-machine** from a shared, logical-name config — nothing is hardcoded to a username or absolute path.
+- **Sync is plain `git`** (any remote — GitHub, GitLab, self-hosted, local bare repo). No cloud SDK, no OS scheduler required.
+
+```bash
+# in your (private) vault repo:
+npx @starlight-intelligence/memory discover     # list this machine's Claude memory dirs
+# add the ones you want to starlight-memory.config.json (see the .example file)
+npx @starlight-intelligence/memory wire          # symlink them into the vault
+npx @starlight-intelligence/memory sync          # pull, then commit + push changes
+npx @starlight-intelligence/memory status        # link state + git status
+```
+
+On a second machine: clone the vault, run `wire`, done — memory follows you. Run `sync` from any agent hook, `git` alias, or your own scheduler (launchd / cron / Task Scheduler) for hands-off operation. `unwire` cleanly restores real directories. Keep the vault repo **private** — it holds your actual memories; this package (the tooling) is the public, MIT part.
+
 ## Current package surface
 
 ```ts
