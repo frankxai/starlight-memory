@@ -1,0 +1,16 @@
+{
+  "vault": ".",
+  "remote": "origin",
+  "targets": [
+    {
+      "name": "my-project",
+      "agent": "claude-code",
+      "workspace": "/absolute/path/to/your/workspace"
+    },
+    {
+      "name": "explicit-example",
+      "agent": "claude-code",
+      "memoryDir": "/or/point/directly/at/a/memory/dir"
+    }
+  ]
+}

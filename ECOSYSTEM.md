@@ -8,3 +8,4 @@ This repository is part of the [FrankX ecosystem](https://github.com/frankxai/fr
 - **Feeds / is consumed by:** Any provider implementing the memory contract
 
 See the [canonical ecosystem map](https://github.com/frankxai/frankxai/blob/main/ECOSYSTEM.md) for how every repo fits together.
+Built on SIP
