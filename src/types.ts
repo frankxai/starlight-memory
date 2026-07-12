@@ -108,7 +108,7 @@ export interface ProviderRoute {
 export interface ProviderCapabilities {
   provider: ProviderName;
   process_model: ProcessModel;
-  authority: "primary" | "adapter" | "accelerator" | "runtime";
+  authority: "primary" | "adapter" | "accelerator" | "peer_modeling" | "graph_synthesis" | "runtime";
   ram_profile: "low" | "medium" | "high" | "remote";
   supports_batching: boolean;
   per_agent_instance_allowed: boolean;
