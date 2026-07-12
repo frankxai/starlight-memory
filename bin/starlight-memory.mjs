@@ -185,7 +185,7 @@ const HARNESSES = {
   cursor: { path: '~/.cursor/mcp.json', fmt: 'json', key: 'mcpServers' },
   gemini: { path: '~/.gemini/settings.json', fmt: 'json', key: 'mcpServers' },
   antigravity: { path: '~/.antigravity/mcp.json', fmt: 'json', key: 'mcpServers' },
-  grok: { path: '~/.grok/mcp.json', fmt: 'json', key: 'mcpServers' },
+  grok: { path: '~/.grok/config.toml', fmt: 'toml' },
 };
 
 async function cmdInit(cfg, rest) {
