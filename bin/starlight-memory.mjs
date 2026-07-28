@@ -211,6 +211,29 @@ async function cmdInit(cfg, rest) {
   console.log(`\nApplying these edits harness configs is a self-modifying action — apply manually or approve it explicitly (auto-mode blocks it).`);
 }
 
+async function cmdExportCloud(cfg, rest) {
+  const value = (flag) => {
+    const index = rest.indexOf(flag);
+    return index >= 0 ? rest[index + 1] : undefined;
+  };
+  const sourceVault = value('--vault') || cfg?.vault;
+  const outputVault = value('--out');
+  if (!sourceVault || !outputVault) die('usage: starlight-memory mcp export-cloud --vault <canonical-vault> --out <projection-vault> [--tenant <tenant>]');
+  const { exportCloudProjection } = await import('../src/mcp/cloud-projection.mjs');
+  const signingKeyEnv = value('--signing-key-env') || 'STARLIGHT_MEMORY_PROJECTION_SIGNING_KEY';
+  const signingKey = process.env[signingKeyEnv];
+  if (!signingKey) die(`${signingKeyEnv} must contain the Ed25519 PEM private key used to sign cloud projections`);
+  const result = await exportCloudProjection({
+    sourceVault,
+    outputVault,
+    tenant: value('--tenant') || 'frank',
+    allowPrivateShareable: rest.includes('--allow-private-shareable'),
+    signingKey,
+  });
+  ok(`cloud projection ${result.projection_id.slice(0, 12)}: ${result.projected_records}/${result.source_records} records exported to ${result.output_vault}`);
+  info(`${result.excluded_records} records excluded by privacy policy (public only unless --allow-private-shareable is explicitly set).`);
+}
+
 function help() {
   console.log(`starlight-memory — portable memory vault: wiring, sync, and cross-agent MCP
 
@@ -221,7 +244,9 @@ Usage: starlight-memory <command> [--config <path>]
   unwire     restore memory dirs to real folders (reverses wire)
   status     show link state + git status
   sync       git pull --rebase, then commit + push any changes
-  mcp serve  run the memory MCP server over the vault (stdio) [--vault --embeddings]
+  mcp serve  run the full local memory MCP server over the vault (stdio) [--vault --embeddings]
+  mcp gateway  run the authenticated read-only Streamable HTTP MCP gateway [--vault --host --port --token-env]
+  mcp export-cloud  build a privacy-filtered, summary-only projection for the cloud gateway [--vault --out]
   init       emit MCP config snippets per harness [--harness all|claude-code,codex,...]
   help       this text
 
@@ -248,7 +273,9 @@ const cfgFlag = (() => { const i = rest.indexOf('--config'); return i >= 0 ? res
     case 'sync': return cmdSync(await loadConfig(cfgFlag));
     case 'mcp':
       if (rest[0] === 'serve') { await import('../src/mcp/server.mjs'); return; }
-      return die('usage: starlight-memory mcp serve [--vault <path>] [--embeddings auto|on|off]');
+      if (rest[0] === 'gateway') { const { main } = await import('../src/mcp/cloud-gateway.mjs'); await main(); return; }
+      if (rest[0] === 'export-cloud') { await cmdExportCloud(null, rest.slice(1)); return; }
+      return die('usage: starlight-memory mcp <serve|gateway|export-cloud> [--vault <path>]');
     case 'init': return cmdInit(await loadConfig(cfgFlag), rest);
     case 'help': case undefined: case '--help': case '-h': return help();
     default: die(`unknown command "${cmd}" (try: starlight-memory help)`);
