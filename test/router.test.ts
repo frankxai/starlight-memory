@@ -74,6 +74,16 @@ describe("SIS memory-provider router", () => {
     assert.ok(routes.every((r) => r.mode !== "canonical_write" || r.provider === "local_core"));
   });
 
+  it("selects Graphiti only when an explicit tenant graph provider policy requests it", () => {
+    const routes = routeMemoryRecord(
+      record({ entities: [{ name: "Starlight" }], privacy_class: "private-shareable" }),
+      { tenant_id: "tenant_frank", graph_memory: true, graph_provider: "graphiti" },
+    );
+
+    assert.ok(routes.some((route) => route.provider === "graphiti" && route.mode === "graph_projection"));
+    assert.ok(!routes.some((route) => route.provider === "hindsight"));
+  });
+
   it("uses local-only routing for privacy-sensitive tenants", () => {
     const routes = routeMemoryRecord(
       record({ privacy_class: "private" }),
