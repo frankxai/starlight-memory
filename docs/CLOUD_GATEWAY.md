@@ -96,5 +96,6 @@ Graphiti is optional and stays behind `GraphitiProjectionProvider` in the Starli
 
 - `local_core` remains authoritative.
 - Graphiti is a shared daemon/remote graph accelerator, never an agent-local runtime.
-- Graphiti receives only normalized facts or summaries and blocks `secret`/`regulated` data by default.
+- Remote Graphiti receives only normalized facts or summaries, a minimal metadata allowlist, and blocks `private`/`secret`/`regulated` data by default. `private` is accepted only by an explicitly declared local shared daemon or an explicit tenant external-mirror policy.
+- Production gateways should configure `JsonFileGraphitiProjectionOutbox` (or an equivalent contract implementation) so sanitized writes and deletion tombstones survive process restarts.
 - Tenant policy must explicitly select `graph_provider: "graphiti"`; provider defaults remain an evaluation decision, not a documentation claim.

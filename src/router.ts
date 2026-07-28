@@ -1,4 +1,5 @@
 import type { ProviderRoute, SISMemoryRecord, TenantMemoryPolicy } from "./types.js";
+import { isExternalMirrorAllowed } from "./external-privacy.js";
 
 const LOCAL_CORE_ROUTE: ProviderRoute = {
   provider: "local_core",
@@ -6,10 +7,11 @@ const LOCAL_CORE_ROUTE: ProviderRoute = {
   reason: "SIS canonical event log and vaults are always authoritative",
 };
 
-function isExternallyBlocked(record: SISMemoryRecord, policy: TenantMemoryPolicy): boolean {
-  if (record.privacy_class === "secret") return true;
-  if (record.privacy_class === "regulated" && !policy.allow_regulated_external_mirror) return true;
-  return false;
+function canUseExternalMirror(record: SISMemoryRecord, policy: TenantMemoryPolicy): boolean {
+  return isExternalMirrorAllowed(record.privacy_class, {
+    allowPrivateExternalMirror: policy.allow_private_external_mirror,
+    allowRegulatedExternalMirror: policy.allow_regulated_external_mirror,
+  });
 }
 
 function hasGraphShape(record: SISMemoryRecord): boolean {
@@ -18,8 +20,6 @@ function hasGraphShape(record: SISMemoryRecord): boolean {
 
 export function routeMemoryRecord(record: SISMemoryRecord, policy: TenantMemoryPolicy): ProviderRoute[] {
   const routes: ProviderRoute[] = [LOCAL_CORE_ROUTE];
-
-  if (isExternallyBlocked(record, policy)) return routes;
 
   if (policy.local_only) {
     routes.push({
@@ -46,15 +46,19 @@ export function routeMemoryRecord(record: SISMemoryRecord, policy: TenantMemoryP
     });
   }
 
+  const externalMirrorAllowed = canUseExternalMirror(record, policy);
+
   if (policy.developer_cli_memory) {
-    routes.push({
-      provider: "byterover",
-      mode: "derived_local_write",
-      reason: "Developer CLI memory requested behind SIS gateway",
-    });
+    if (externalMirrorAllowed) {
+      routes.push({
+        provider: "byterover",
+        mode: "derived_local_write",
+        reason: "Developer CLI memory requested behind SIS gateway and external privacy policy allows it",
+      });
+    }
   }
 
-  if (policy.default_cloud_memory) {
+  if (policy.default_cloud_memory && externalMirrorAllowed) {
     routes.push({
       provider: policy.default_cloud_memory,
       mode: "redacted_fact_write",
@@ -64,14 +68,21 @@ export function routeMemoryRecord(record: SISMemoryRecord, policy: TenantMemoryP
 
   if (policy.graph_memory || hasGraphShape(record)) {
     const graphProvider = policy.graph_provider ?? "hindsight";
-    routes.push({
-      provider: graphProvider,
-      mode: "graph_projection",
-      reason: `${graphProvider} is enabled as the derived graph projection for entity/relation recall`,
-    });
+    const localGraphForPrivate =
+      record.privacy_class === "private" &&
+      policy.graph_deployment === "local_shared_daemon";
+    if (externalMirrorAllowed || localGraphForPrivate) {
+      routes.push({
+        provider: graphProvider,
+        mode: "graph_projection",
+        reason: localGraphForPrivate
+          ? `${graphProvider} is explicitly constrained to a local shared daemon`
+          : `${graphProvider} is enabled as a policy-approved derived graph projection`,
+      });
+    }
   }
 
-  if (policy.enterprise_connectors) {
+  if (policy.enterprise_connectors && externalMirrorAllowed) {
     routes.push({
       provider: "supermemory",
       mode: "document_or_session_ingest",
@@ -79,7 +90,7 @@ export function routeMemoryRecord(record: SISMemoryRecord, policy: TenantMemoryP
     });
   }
 
-  if (policy.peer_modeling) {
+  if (policy.peer_modeling && externalMirrorAllowed) {
     routes.push({
       provider: "honcho",
       mode: "peer_observation",
