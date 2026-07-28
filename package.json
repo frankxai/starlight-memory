@@ -52,7 +52,7 @@
     }
   },
   "scripts": {
-    "test": "node --import tsx --test test/*.test.ts",
+    "test": "node --import tsx --test test/*.test.ts test/*.test.mjs",
     "lint": "tsc --noEmit",
     "build": "tsc",
     "verify": "npm run test && npm run lint && npm run build",
@@ -63,6 +63,9 @@
   },
   "optionalDependencies": {
     "@huggingface/transformers": "^3.0.0"
+  },
+  "overrides": {
+    "@hono/node-server": "^2.0.12"
   },
   "keywords": [
     "ai-memory",
@@ -81,6 +84,6 @@
     "typescript": "^5.7.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   }
 }

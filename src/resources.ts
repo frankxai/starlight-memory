@@ -55,6 +55,15 @@ export const DEFAULT_PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities>
     per_agent_instance_allowed: false,
     notes: "Primary for long-term learning/reflect. Use behind gateway. Self-host where possible for sovereignty. Mental models project to MemPalace/vaults.",
   },
+  graphiti: {
+    provider: "graphiti",
+    process_model: "shared_daemon_or_remote_api",
+    authority: "graph_synthesis",
+    ram_profile: "high",
+    supports_batching: true,
+    per_agent_instance_allowed: false,
+    notes: "Optional temporal graph projection. Run one authenticated Graphiti + FalkorDB/Neo4j service per tenant or environment; never create a graph runtime per coding agent.",
+  },
   honcho: {
     provider: "honcho",
     process_model: "remote_api",

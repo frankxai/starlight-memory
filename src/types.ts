@@ -5,6 +5,7 @@ export type ProviderName =
   | "byterover"
   | "mem0"
   | "hindsight"
+  | "graphiti"
   | "honcho"
   | "supermemory"
   | "retaindb"
@@ -91,6 +92,8 @@ export interface TenantMemoryPolicy {
   local_provider?: ProviderName;
   default_cloud_memory?: ProviderName;
   graph_memory?: boolean;
+  /** Optional graph projection backend. Defaults to Hindsight for compatibility. */
+  graph_provider?: "hindsight" | "graphiti";
   enterprise_connectors?: boolean;
   peer_modeling?: boolean;
   developer_cli_memory?: boolean;
