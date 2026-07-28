@@ -62,7 +62,7 @@ describe("Mem0RemoteProvider", () => {
     assert.equal(added[0]?.metadata.tenant_id, "tenant_frank");
   });
 
-  it("blocks secret and regulated records unless explicitly allowed", async () => {
+  it("blocks private, secret, and regulated records unless explicitly allowed", async () => {
     let calls = 0;
     const client: Mem0Client = {
       async addMemory() { calls++; return { id: "mem0_forbidden" }; },
@@ -71,14 +71,20 @@ describe("Mem0RemoteProvider", () => {
     };
     const provider = new Mem0RemoteProvider({ client });
 
+    const privateRecord = await provider.remember(record("private_1", "private"));
     const secret = await provider.remember(record("secret_1", "secret"));
     const regulated = await provider.remember(record("regulated_1", "regulated"));
     const flushed = await provider.flush();
 
+    assert.equal(privateRecord.provider_shadow_refs.mem0?.sync_state, "failed");
     assert.equal(secret.provider_shadow_refs.mem0?.sync_state, "failed");
     assert.equal(regulated.provider_shadow_refs.mem0?.sync_state, "failed");
     assert.equal(flushed.written, 0);
     assert.equal(calls, 0);
+
+    const allowed = new Mem0RemoteProvider({ client, allow_private_external_mirror: true });
+    await allowed.remember(record("private_allowed", "private"));
+    assert.equal((await allowed.flush()).written, 1);
   });
 
   it("recalls via remote search and maps provider refs without becoming canonical", async () => {

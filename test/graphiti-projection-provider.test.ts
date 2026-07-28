@@ -1,7 +1,11 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import os from "node:os";
+import path from "node:path";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import {
   GraphitiProjectionProvider,
+  JsonFileGraphitiProjectionOutbox,
   type GraphitiClient,
   type SISMemoryRecord,
 } from "../src/index.js";
@@ -58,9 +62,13 @@ describe("GraphitiProjectionProvider", () => {
     assert.equal(writes[0]?.episode_body.includes("Raw vault content"), false);
     assert.equal(writes[0]?.metadata?.sis_memory_id, "sis_1");
     assert.equal(writes[0]?.metadata?.tenant_id, "tenant_frank");
+    assert.equal(writes[0]?.metadata?.workspace_id, undefined);
+    assert.equal(writes[0]?.metadata?.agent_id, undefined);
+    assert.equal(writes[0]?.metadata?.entities, undefined);
+    assert.equal(writes[0]?.metadata?.relations, undefined);
   });
 
-  it("blocks secret and regulated records before they can enter the graph projection", async () => {
+  it("blocks private, secret, and regulated records before they can enter a remote graph projection", async () => {
     let writes = 0;
     const client: GraphitiClient = {
       async addEpisode() { writes++; return { id: "graphiti_unexpected" }; },
@@ -69,14 +77,32 @@ describe("GraphitiProjectionProvider", () => {
     };
     const provider = new GraphitiProjectionProvider({ client });
 
+    const privateRecord = await provider.remember(record("private_1", "private"));
     const secret = await provider.remember(record("secret_1", "secret"));
     const regulated = await provider.remember(record("regulated_1", "regulated"));
     const flushed = await provider.flush();
 
+    assert.equal(privateRecord.provider_shadow_refs.graphiti?.provider_record_id, "blocked_by_policy");
     assert.equal(secret.provider_shadow_refs.graphiti?.provider_record_id, "blocked_by_policy");
     assert.equal(regulated.provider_shadow_refs.graphiti?.sync_state, "failed");
     assert.equal(flushed.written, 0);
     assert.equal(writes, 0);
+  });
+
+  it("allows private graph projection only for an explicit local shared daemon or external opt-in", async () => {
+    let writes = 0;
+    const client: GraphitiClient = {
+      async addEpisode() { writes++; return { id: `graphiti_${writes}` }; },
+      async searchFacts() { return []; },
+      async deleteByMemoryId() { return true; },
+    };
+    const local = new GraphitiProjectionProvider({ client, deployment: "local_shared_daemon" });
+    await local.remember(record("private_local", "private"));
+    assert.equal((await local.flush()).written, 1);
+
+    const external = new GraphitiProjectionProvider({ client, allowPrivateExternalMirror: true });
+    await external.remember(record("private_explicit", "private"));
+    assert.equal((await external.flush()).written, 1);
   });
 
   it("uses tenant-scoped graph recall and rejects cross-tenant facts returned by an upstream client", async () => {
@@ -214,6 +240,90 @@ describe("GraphitiProjectionProvider", () => {
     assert.equal(provider.pendingCount(), 1);
     assert.deepEqual(await provider.flush(), { attempted: 1, written: 1, failed: 0 });
     assert.equal(provider.pendingCount(), 0);
+  });
+
+  it("restores sanitized retry work from a durable outbox after a gateway restart", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "starlight-graphiti-outbox-"));
+    const outboxPath = path.join(root, "graphiti-outbox.json");
+    try {
+      const failingClient: GraphitiClient = {
+        async addEpisode() { throw new Error("transient outage"); },
+        async searchFacts() { return []; },
+        async deleteByMemoryId() { return true; },
+      };
+      const first = new GraphitiProjectionProvider({
+        client: failingClient,
+        outbox: new JsonFileGraphitiProjectionOutbox(outboxPath),
+      });
+      await first.remember(record("durable_retry"));
+      assert.deepEqual(await first.flush(), { attempted: 1, written: 0, failed: 1 });
+
+      const serialized = await readFile(outboxPath, "utf8");
+      assert.doesNotMatch(serialized, /Raw vault content|workspace_id|agent_id|entities|relations/);
+      assert.match(serialized, /durable_retry/);
+
+      let restoredWrites = 0;
+      const healthyClient: GraphitiClient = {
+        async addEpisode() { restoredWrites++; return { id: "restored" }; },
+        async searchFacts() { return []; },
+        async deleteByMemoryId() { return true; },
+      };
+      const restarted = new GraphitiProjectionProvider({
+        client: healthyClient,
+        outbox: new JsonFileGraphitiProjectionOutbox(outboxPath),
+      });
+      assert.equal(await restarted.hydrate(), 1);
+      assert.deepEqual(await restarted.flush(), { attempted: 1, written: 1, failed: 0 });
+      assert.equal(restoredWrites, 1);
+      assert.equal(restarted.pendingCount(), 0);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("serializes concurrent outbox snapshots so fan-in cannot lose queued projections", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "starlight-graphiti-fanin-"));
+    const outboxPath = path.join(root, "graphiti-outbox.json");
+    try {
+      const client: GraphitiClient = {
+        async addEpisode() { return { id: "unused" }; },
+        async searchFacts() { return []; },
+        async deleteByMemoryId() { return true; },
+      };
+      const provider = new GraphitiProjectionProvider({
+        client,
+        outbox: new JsonFileGraphitiProjectionOutbox(outboxPath),
+      });
+      await Promise.all(Array.from({ length: 20 }, (_, index) => provider.remember(record(`fanin_${index}`))));
+
+      const restarted = new GraphitiProjectionProvider({
+        client,
+        outbox: new JsonFileGraphitiProjectionOutbox(outboxPath),
+      });
+      assert.equal(await restarted.hydrate(), 20);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("fails closed when a durable outbox is corrupt", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "starlight-graphiti-corrupt-"));
+    const outboxPath = path.join(root, "graphiti-outbox.json");
+    try {
+      await writeFile(outboxPath, "{\"version\":1,\"projections\":\"invalid\"}", "utf8");
+      const client: GraphitiClient = {
+        async addEpisode() { return { id: "unused" }; },
+        async searchFacts() { return []; },
+        async deleteByMemoryId() { return true; },
+      };
+      const provider = new GraphitiProjectionProvider({
+        client,
+        outbox: new JsonFileGraphitiProjectionOutbox(outboxPath),
+      });
+      await assert.rejects(provider.hydrate(), /Invalid Graphiti outbox projections/);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 
   it("declares Graphiti as a singleton shared daemon or remote graph accelerator", () => {
