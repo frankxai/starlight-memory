@@ -1,4 +1,3 @@
-import { DEFAULT_PROVIDER_CAPABILITIES } from "../resources.js";
 import type {
   ForgetRequest,
   MemoryProvider,
@@ -6,7 +5,7 @@ import type {
   RecallRequest,
   RecallResult,
   SISMemoryRecord,
-} from "../types.js";
+} from "./types.js";
 
 export interface PGLiteVectorOptions {
   embeddingDimension?: number;
@@ -52,7 +51,7 @@ export class PGLiteVectorProvider implements MemoryProvider {
       record.normalized_fact,
       record.summary,
       record.raw_content,
-      ...record.entities.map((e) => e.name),
+      ...record.entities.map((e: { name: string }) => e.name),
     ]
       .filter(Boolean)
       .join(" ");
