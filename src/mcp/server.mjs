@@ -11,6 +11,8 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { loadVault, writeAtom, deleteAtom } from './vault-store.mjs';
 import { HybridIndex } from './hybrid-index.mjs';
+import { CodeSymbolIndex } from '../../dist/code-symbol-index.js';
+import { PGLiteVectorProvider } from '../../dist/pglite-provider.js';
 
 const VAULTS = ['strategic', 'technical', 'creative', 'operational', 'wisdom', 'horizon'];
 const MEM_TYPES = ['working', 'episodic', 'semantic', 'procedural', 'profile', 'policy', 'aspirational'];
@@ -49,6 +51,11 @@ const TOOLS = [
   { name: 'vault_read', description: 'Read the full content of one memory atom by id.', inputSchema: { type: 'object', properties: { memory_id: { type: 'string' } }, required: ['memory_id'] } },
   { name: 'vault_list', description: 'List all memory atoms (id + summary + vault).', inputSchema: { type: 'object', properties: { limit: { type: 'number' } } } },
   { name: 'memory_stats', description: 'Index + vault statistics (atom count, embeddings status).', inputSchema: { type: 'object', properties: {} } },
+  { name: 'code_index', description: 'AST-aware indexer: scan a directory for code symbols, functions, classes, interfaces, and call graphs.', inputSchema: { type: 'object', properties: { directory: { type: 'string', description: 'directory path (default: current workspace)' } } } },
+  { name: 'code_def', description: 'AST symbol definition lookup. Returns the exact declaration file, line, and signature of a symbol.', inputSchema: { type: 'object', properties: { symbol: { type: 'string', description: 'symbol name to locate' } }, required: ['symbol'] } },
+  { name: 'code_refs', description: 'Find all references and call sites of a symbol across the indexed codebase.', inputSchema: { type: 'object', properties: { symbol: { type: 'string', description: 'symbol name' } }, required: ['symbol'] } },
+  { name: 'code_callers', description: 'Find all callers and invocation sites of a function or method.', inputSchema: { type: 'object', properties: { symbol: { type: 'string', description: 'function or method name' } }, required: ['symbol'] } },
+  { name: 'vector_recall', description: 'In-process PGLite vector similarity recall across stored memories using cosine embeddings.', inputSchema: { type: 'object', properties: { query: { type: 'string' }, limit: { type: 'number' } }, required: ['query'] } },
 ];
 
 function text(t) { return { content: [{ type: 'text', text: t }] }; }
@@ -65,6 +72,9 @@ async function main() {
   const cfg = await resolveConfig(opts);
   const mgr = new VaultManager(cfg);
   await mgr.load();
+
+  const codeIndex = new CodeSymbolIndex();
+  const pglite = new PGLiteVectorProvider();
 
   const server = new Server({ name: 'starlight-memory', version: '0.2.0' }, { capabilities: { tools: {} } });
   server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: TOOLS }));
@@ -116,6 +126,30 @@ async function main() {
         }
         case 'memory_stats':
           return text(JSON.stringify({ vaultRoot: cfg.vaultRoot, tenant: cfg.tenant, ...mgr.index.stats() }, null, 2));
+        case 'code_index': {
+          const targetDir = args.directory ? path.resolve(args.directory) : process.cwd();
+          const summary = await codeIndex.indexDirectory(targetDir);
+          return text(`Indexed ${summary.totalFilesIndexed} files in ${targetDir}:\n- ${summary.totalDefinitions} definitions\n- ${summary.totalReferences} references\n- ${summary.totalCallGraphEdges} call edges`);
+        }
+        case 'code_def': {
+          const defs = codeIndex.getDefinitions(args.symbol);
+          if (!defs.length) return text(`No definition found for symbol "${args.symbol}". Tip: run code_index first.`);
+          return text(defs.map((d) => `[${d.kind}] ${d.name}\n  file: ${d.file}:${d.line}:${d.column}\n  signature: ${d.signature || '-'}`).join('\n\n'));
+        }
+        case 'code_refs': {
+          const refs = codeIndex.getReferences(args.symbol);
+          if (!refs.length) return text(`No references found for symbol "${args.symbol}".`);
+          return text(refs.map((r) => `  ${r.file}:${r.line}:${r.column} -> ${r.contextSnippet}`).join('\n'));
+        }
+        case 'code_callers': {
+          const callers = codeIndex.getCallers(args.symbol);
+          if (!callers.length) return text(`No callers found for symbol "${args.symbol}".`);
+          return text(callers.map((c) => `  ${c.file}:${c.line}:${c.column} -> ${c.contextSnippet}`).join('\n'));
+        }
+        case 'vector_recall': {
+          const results = await pglite.recall({ tenant_id: cfg.tenant, query: args.query, limit: args.limit || 8 });
+          return text(fmt(results));
+        }
         default:
           return { content: [{ type: 'text', text: `Unknown tool: ${name}` }], isError: true };
       }
