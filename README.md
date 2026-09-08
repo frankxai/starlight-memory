@@ -4,14 +4,32 @@
   <img src=".github/hero.svg" alt="Starlight Memory: sovereign local-core memory routing for AI agents" width="100%">
 </p>
 
-Sovereign memory provider contract, router, and resource policy for the Starlight Intelligence System.
+Local-first memory for agent fleets: a sovereign provider contract, router, and resource policy for the Starlight Intelligence System.
 
 [![CI](https://github.com/frankxai/starlight-memory/actions/workflows/ci.yml/badge.svg)](https://github.com/frankxai/starlight-memory/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2563eb)](package.json)
 [![Built on SIP](https://img.shields.io/badge/built%20on-SIP-7c3aed)](https://github.com/frankxai/Starlight-Intelligence-System)
 [![Memory](https://img.shields.io/badge/memory-local%20core%20first-0f766e)](docs/ADAPTER_CONTRACT.md)
 
-This repo is the extraction point for the memory layer, and SIS remains the canonical control plane. `local_core` is the sovereign authority (filesystem-native markdown + hybrid recall); everything else — Hindsight, Honcho, Mem0, … — is a scored adapter behind the provider contract.
+This repo is the extraction point for the memory layer; SIS remains the canonical control plane.
+
+SIS / `local_core` is the canonical authority: it owns memory IDs, provenance, retention, and policy. Everything else—Graphiti, Hindsight, Honcho, Mem0, and cloud access—is an optional derived provider or projection behind the contract. **Your vault is authoritative. Providers are replaceable. Remote access is projection-only.**
+
+```text
+Canonical SIS/local vault
+        │ policy + privacy gate
+        ├── optional derived provider projection (for example, Graphiti)
+        └── optional signed cloud projection → read-only remote MCP recall
+```
+
+| Capability | Current evidence | Boundary |
+|---|---|---|
+| Local-first routing | Implemented and test-covered | Providers never become canonical |
+| Optional Graphiti projection | Injected shared-client adapter with privacy, retry, and tenant tests | No Graphiti deployment is claimed |
+| Signed cloud projection | Local exporter/gateway integration tests | Not a hosted service |
+| Remote MCP recall | Authenticated local integration test | Production rollout remains gated |
+
+> **Cloud status:** locally verified implementation only. No public endpoint, cloud write path, OAuth edge, or hosted-memory service is being claimed. See [Cloud Projection Boundary](docs/CLOUD_GATEWAY.md).
 
 ## Add persistent memory to any coding agent (MCP)
 
@@ -22,7 +40,9 @@ npx @starlight-intelligence/memory init --harness all   # writes an MCP snippet 
 # merge each snippet into that agent's MCP config, then restart it
 ```
 
-Three tools over stdio: `memory_recall` (hybrid lexical + semantic), `memory_search` (BM25), `memory_remember` (persist a markdown atom). Memory lives as filesystem-native markdown in your vault — sovereign, versioned, yours. Heavy providers fan in through this one gateway; never one runtime per terminal agent.
+Twelve tools over local stdio: `memory_recall` (hybrid lexical + semantic), `memory_search` (BM25), `memory_remember`, `memory_forget`, `vault_read`, `vault_list`, `memory_stats`, `memory_audit`, plus the AST code-symbol tools `code_index`, `code_def`, `code_refs`, and `code_callers`. Profiles narrow that surface: `reads` for the pooled plane process, `writes` for a light per-session one. Memory lives as filesystem-native markdown in your vault — sovereign, versioned, yours. Heavy providers fan in through this one gateway; never one runtime per terminal agent.
+
+For cloud-hosted agents, use the separate authenticated, read-only Streamable HTTP gateway backed by an **Ed25519-signed, hash-verified summary projection** — never the canonical vault. The production gate remains explicit; see [`docs/CLOUD_GATEWAY.md`](docs/CLOUD_GATEWAY.md).
 
 ## Memory Observatory — which memory system should you use?
 
@@ -33,7 +53,7 @@ node tools/memory-observatory.mjs list
 node tools/memory-observatory.mjs recommend --ram 32 --sovereignty high --privacy high --cross-device --theory-of-mind
 ```
 
-`local_core` is always the authority; the rest are scored on license, cost, privacy, cross-device, theory-of-mind, and recall benchmark. **Evaluation decides defaults** — see [`docs/STARLIGHT-MEMORY-SYSTEM.md`](docs/STARLIGHT-MEMORY-SYSTEM.md) and run `node eval/provider-recall.mjs` for the scorecard.
+`local_core` is always the authority; the rest are scored on license, cost, privacy, cross-device, theory-of-mind, and recall benchmark. Accelerators marked opt-in (such as gbrain) are ranked but never recommended as a default, because they may not be running. **Evaluation decides defaults** — see [`docs/STARLIGHT-MEMORY-SYSTEM.md`](docs/STARLIGHT-MEMORY-SYSTEM.md) and run `node eval/provider-recall.mjs` for the scorecard.
 
 ## 90-second start
 
@@ -100,7 +120,8 @@ Routes a SIS memory record through the canonical local write plus optional mirro
 
 - `local_core` — always first, always canonical.
 - `mem0` — optional redacted cloud fact mirror.
-- `hindsight` — graph/entity projection.
+- `hindsight` — default graph/entity projection for compatibility.
+- `graphiti` — optional temporal graph projection, explicitly selected per tenant and always behind the Starlight gateway.
 - `supermemory` — enterprise connector/session ingest.
 - `honcho` — peer/user modeling.
 - `holographic`, `openviking`, `byterover` — local/dev memory accelerators.
