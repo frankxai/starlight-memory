@@ -38,6 +38,14 @@ export function routeMemoryRecord(record: SISMemoryRecord, policy: TenantMemoryP
     });
   }
 
+  if (policy.hybrid_retrieval) {
+    routes.push({
+      provider: "gbrain",
+      mode: "derived_local_write",
+      reason: "Hybrid retrieval (vector + BM25 + rerank) requested over the shared local brain",
+    });
+  }
+
   if (policy.knowledge_browsing) {
     routes.push({
       provider: "openviking",

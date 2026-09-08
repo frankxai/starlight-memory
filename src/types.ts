@@ -10,6 +10,7 @@ export type ProviderName =
   | "retaindb"
   | "memori"
   | "letta_runtime"
+  | "gbrain"
   | string;
 
 export type MemoryProviderMode =
@@ -96,6 +97,7 @@ export interface TenantMemoryPolicy {
   developer_cli_memory?: boolean;
   knowledge_browsing?: boolean;
   local_compositional_recall?: boolean;
+  hybrid_retrieval?: boolean;
   allow_regulated_external_mirror?: boolean;
 }
 

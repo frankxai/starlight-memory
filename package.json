@@ -55,7 +55,8 @@
     "test": "node --import tsx --test test/*.test.ts",
     "lint": "tsc --noEmit",
     "build": "tsc",
-    "verify": "npm run test && npm run lint && npm run build",
+    "test:smoke": "node test/mcp-smoke.mjs",
+    "verify": "npm run test && npm run lint && npm run build && npm run test:smoke",
     "mcp": "node bin/starlight-memory.mjs mcp serve"
   },
   "dependencies": {
