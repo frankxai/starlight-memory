@@ -71,10 +71,11 @@ export function routeMemoryRecord(record: SISMemoryRecord, policy: TenantMemoryP
   }
 
   if (policy.graph_memory || hasGraphShape(record)) {
+    const graphProvider = policy.graph_provider ?? "hindsight";
     routes.push({
-      provider: "hindsight",
+      provider: graphProvider,
       mode: "graph_projection",
-      reason: "Entity/relation shape benefits from graph recall and reflection",
+      reason: `${graphProvider} is enabled as the derived graph projection for entity/relation recall`,
     });
   }
 

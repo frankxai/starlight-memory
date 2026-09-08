@@ -313,6 +313,29 @@ async function cmdDoctor(rest) {
   if (report.checks.some((c) => c.status === 'fail')) process.exit(1);
 }
 
+async function cmdExportCloud(cfg, rest) {
+  const value = (flag) => {
+    const index = rest.indexOf(flag);
+    return index >= 0 ? rest[index + 1] : undefined;
+  };
+  const sourceVault = value('--vault') || cfg?.vault;
+  const outputVault = value('--out');
+  if (!sourceVault || !outputVault) die('usage: starlight-memory mcp export-cloud --vault <canonical-vault> --out <projection-vault> [--tenant <tenant>]');
+  const { exportCloudProjection } = await import('../src/mcp/cloud-projection.mjs');
+  const signingKeyEnv = value('--signing-key-env') || 'STARLIGHT_MEMORY_PROJECTION_SIGNING_KEY';
+  const signingKey = process.env[signingKeyEnv];
+  if (!signingKey) die(`${signingKeyEnv} must contain the Ed25519 PEM private key used to sign cloud projections`);
+  const result = await exportCloudProjection({
+    sourceVault,
+    outputVault,
+    tenant: value('--tenant') || 'frank',
+    allowPrivateShareable: rest.includes('--allow-private-shareable'),
+    signingKey,
+  });
+  ok(`cloud projection ${result.projection_id.slice(0, 12)}: ${result.projected_records}/${result.source_records} records exported to ${result.output_vault}`);
+  info(`${result.excluded_records} records excluded by privacy policy (public only unless --allow-private-shareable is explicitly set).`);
+}
+
 function help() {
   console.log(`starlight-memory — portable memory vault: wiring, sync, and cross-agent MCP
 
@@ -328,6 +351,11 @@ Usage: starlight-memory <command> [--config <path>]
              [--harness claude-code,codex,cursor,gemini,antigravity,grok] [--plane] [--embeddings auto|on|off]
              [--profile reads|writes|all]  (default: writes-only for plane clients, all for the rest)
   mcp serve  run the memory MCP server over the vault (stdio) [--vault --embeddings --profile]
+  mcp gateway
+             run the authenticated read-only Streamable HTTP MCP gateway [--vault --host --port --token-env]
+  mcp export-cloud
+             build a privacy-filtered, summary-only, signed projection for the cloud gateway
+             [--vault --out --tenant --signing-key-env] [--allow-private-shareable]
   help       this text
 
 Vault resolution (all commands): --vault > config in cwd > ~/.starlight/memory/vault.json
@@ -357,7 +385,9 @@ const cfgFlag = (() => { const i = rest.indexOf('--config'); return i >= 0 ? res
     case 'sync': return cmdSync(await loadConfig(cfgFlag), rest);
     case 'mcp':
       if (rest[0] === 'serve') { await import('../src/mcp/server.mjs'); return; }
-      return die('usage: starlight-memory mcp serve [--vault <path>] [--embeddings auto|on|off]');
+      if (rest[0] === 'gateway') { const { main } = await import('../src/mcp/cloud-gateway.mjs'); await main(); return; }
+      if (rest[0] === 'export-cloud') { await cmdExportCloud(null, rest.slice(1)); return; }
+      return die('usage: starlight-memory mcp <serve|gateway|export-cloud> [--vault <path>] [--embeddings auto|on|off]');
     case 'register': return cmdRegister(rest);
     case 'init': return cmdRegister(rest);
     case 'help': case undefined: case '--help': case '-h': return help();
