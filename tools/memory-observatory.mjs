@@ -15,8 +15,17 @@
  * eval before treating any default as settled — "evaluation decides defaults").
  */
 
+import { pathToFileURL } from "node:url";
+
 /** @typedef {'authority'|'recall-accelerator'|'peer-modeling'|'cloud-mirror'|'kg-recall'|'agent-runtime'} Role */
 
+/**
+ * `optional: true` marks an accelerator that may be absent or unreachable on any
+ * given machine. Such an entry is listed and ranked, but never returned as a
+ * recommended slot — the Queen must never hand back a stack whose default depends
+ * on a tool that might not be running. Registry rows are static metadata: nothing
+ * here probes a provider, so an offline provider costs zero.
+ */
 export const REGISTRY = [
   {
     id: "local-core", name: "Starlight local_core", license: "MIT", role: "authority",
@@ -31,6 +40,14 @@ export const REGISTRY = [
     self_hostable: true, cross_device: "service", theory_of_mind: "partial (reflect synthesis)",
     recall: "knowledge-graph + entity resolution + multi-strategy + reflect", benchmark: "LongMemEval SOTA (vendor claim)",
     sovereignty: 3, adapter: "yes", notes: "Best-in-class recall. Local mode preserves sovereignty. Hermes-native.",
+  },
+  {
+    id: "gbrain", name: "gbrain", license: "third-party (local install)", role: "recall-accelerator",
+    install: "external tool; one shared `gbrain serve --http` per machine", cost: "free (local compute)", ram_gb: 2,
+    self_hostable: true, cross_device: false, theory_of_mind: false,
+    recall: "HNSW + BM25 + RRF + cross-encoder rerank", benchmark: "not independently evaluated here",
+    sovereignty: 5, adapter: "yes", optional: true,
+    notes: "Opt-in behind policy.hybrid_retrieval. Holds a projection of local_core, never canon. Single-writer PGLite: one shared daemon, never one per agent. Absent or offline it must cost zero recall, so it is never the recommended default.",
   },
   {
     id: "honcho", name: "Honcho (Plastic Labs)", license: "AGPL-3.0", role: "peer-modeling",
@@ -108,7 +125,12 @@ export function recommend(req) {
     .filter((s) => s.role !== "authority")
     .map((s) => ({ ...s, ...scoreSystem(s, req) }))
     .sort((a, b) => b.score - a.score);
-  const byRole = (r) => scored.find((s) => s.role === r && s.adapter === "yes") || scored.find((s) => s.role === r);
+  // Optional accelerators are ranked but never fill a recommended slot: a
+  // recommendation that names a tool which may not be running is a broken default.
+  const byRole = (r) => {
+    const eligible = scored.filter((s) => s.role === r && !s.optional);
+    return eligible.find((s) => s.adapter === "yes") ?? eligible[0];
+  };
   return {
     authority: REGISTRY.find((s) => s.role === "authority"),
     recall: byRole("recall-accelerator"),
@@ -140,7 +162,7 @@ function main() {
     console.log("| System | License | Role | Self-host | ToM | Benchmark | Adapter |");
     console.log("|---|---|---|:-:|:-:|---|:-:|");
     for (const s of REGISTRY) {
-      console.log(`| ${s.name} | ${s.license} | ${s.role} | ${s.self_hostable ? "✓" : "✗"} | ${s.theory_of_mind === true ? "✓" : s.theory_of_mind ? "~" : "✗"} | ${s.benchmark} | ${s.adapter} |`);
+      console.log(`| ${s.name} | ${s.license} | ${s.role} | ${s.self_hostable ? "✓" : "✗"} | ${s.theory_of_mind === true ? "✓" : s.theory_of_mind ? "~" : "✗"} | ${s.benchmark} | ${s.adapter}${s.optional ? " (opt-in)" : ""} |`);
     }
     return;
   }
@@ -161,4 +183,6 @@ function main() {
   console.log("usage: memory-observatory.mjs <list|recommend> [--ram N --sovereignty high --privacy high --cross-device --theory-of-mind --budget low]");
 }
 
-main();
+// REGISTRY and recommend() are exported for other tools and tests, so the CLI
+// must only run when this file is the entry point.
+if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) main();
