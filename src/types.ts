@@ -94,11 +94,15 @@ export interface TenantMemoryPolicy {
   graph_memory?: boolean;
   /** Optional graph projection backend. Defaults to Hindsight for compatibility. */
   graph_provider?: "hindsight" | "graphiti";
+  /** Graphiti/Hindsight execution boundary. Remote is the fail-closed default. */
+  graph_deployment?: "local_shared_daemon" | "remote_api";
   enterprise_connectors?: boolean;
   peer_modeling?: boolean;
   developer_cli_memory?: boolean;
   knowledge_browsing?: boolean;
   local_compositional_recall?: boolean;
+  /** Explicit opt-in for sending `private` records beyond the local trust boundary. */
+  allow_private_external_mirror?: boolean;
   allow_regulated_external_mirror?: boolean;
 }
 

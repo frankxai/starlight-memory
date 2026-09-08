@@ -84,6 +84,40 @@ describe("SIS memory-provider router", () => {
     assert.ok(!routes.some((route) => route.provider === "hindsight"));
   });
 
+  it("keeps private records local unless the tenant explicitly chooses a local graph daemon or external mirror", () => {
+    const privateGraph = record({
+      privacy_class: "private",
+      entities: [{ name: "Private Person" }],
+      relations: [{ subject: "Private Person", predicate: "knows", object: "Private Project" }],
+    });
+    const defaultRoutes = routeMemoryRecord(privateGraph, {
+      tenant_id: "tenant_frank",
+      default_cloud_memory: "mem0",
+      graph_memory: true,
+      graph_provider: "graphiti",
+      enterprise_connectors: true,
+      peer_modeling: true,
+    });
+    assert.deepEqual(defaultRoutes.map((route) => route.provider), ["local_core"]);
+
+    const localGraphRoutes = routeMemoryRecord(privateGraph, {
+      tenant_id: "tenant_frank",
+      graph_memory: true,
+      graph_provider: "graphiti",
+      graph_deployment: "local_shared_daemon",
+    });
+    assert.deepEqual(localGraphRoutes.map((route) => route.provider), ["local_core", "graphiti"]);
+
+    const explicitExternalRoutes = routeMemoryRecord(privateGraph, {
+      tenant_id: "tenant_frank",
+      default_cloud_memory: "mem0",
+      graph_memory: true,
+      graph_provider: "graphiti",
+      allow_private_external_mirror: true,
+    });
+    assert.deepEqual(explicitExternalRoutes.map((route) => route.provider), ["local_core", "mem0", "graphiti"]);
+  });
+
   it("uses local-only routing for privacy-sensitive tenants", () => {
     const routes = routeMemoryRecord(
       record({ privacy_class: "private" }),

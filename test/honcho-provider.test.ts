@@ -70,7 +70,7 @@ describe("HonchoProvider", () => {
     assert.equal(batches[0]?.messages[0]?.metadata?.sis_memory_id, "sis_1");
   });
 
-  it("blocks secret and regulated records unless external mirroring is explicitly allowed", async () => {
+  it("blocks private, secret, and regulated records unless external mirroring is explicitly allowed", async () => {
     let calls = 0;
     const client: HonchoClient = {
       async addMessages() { calls++; return {}; },
@@ -78,10 +78,12 @@ describe("HonchoProvider", () => {
     };
     const provider = new HonchoProvider({ client });
 
+    const privateRecord = await provider.remember(record("private_1", "private"));
     const secret = await provider.remember(record("secret_1", "secret"));
     const regulated = await provider.remember(record("regulated_1", "regulated"));
     const flushed = await provider.flush();
 
+    assert.equal(privateRecord.provider_shadow_refs.honcho?.provider_record_id, "blocked_by_policy");
     assert.equal(secret.provider_shadow_refs.honcho?.provider_record_id, "blocked_by_policy");
     assert.equal(regulated.provider_shadow_refs.honcho?.sync_state, "failed");
     assert.equal(flushed.written, 0);
@@ -91,6 +93,11 @@ describe("HonchoProvider", () => {
     await allowed.remember(record("regulated_2", "regulated"));
     assert.equal((await allowed.flush()).written, 1);
     assert.equal(calls, 1);
+
+    const privateAllowed = new HonchoProvider({ client, allowPrivateExternalMirror: true });
+    await privateAllowed.remember(record("private_allowed", "private"));
+    assert.equal((await privateAllowed.flush()).written, 1);
+    assert.equal(calls, 2);
   });
 
   it("uses peer.chat dialectic recall and maps evidence back to SIS shadow refs", async () => {

@@ -1,6 +1,6 @@
 {
   "name": "@starlight-intelligence/memory",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Sovereign memory provider contract, router, and resource policy for Starlight Intelligence System.",
   "repository": {
     "type": "git",
