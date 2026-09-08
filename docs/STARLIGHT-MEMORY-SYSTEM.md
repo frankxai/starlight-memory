@@ -21,7 +21,7 @@ Starlight Memory is the estate's **memory operating system**: a sovereign canoni
 
 The memory system is wired as a single, canonical MCP server (`src/mcp/server.mjs`) serving all active coding harnesses on your local machine.
 
-- **Unified Vault**: All harnesses point to a single local Git vault: `~/starlight-memory-vault` (contains ~74 semantic memory atoms).
+- **Unified Vault**: All harnesses point to a single local Git vault. Its location is recorded in `~/.starlight/memory/vault.json` by `starlight-memory wire` / `register`, and every entry point (server, doctor, eval) resolves it from there; on this machine that is `starlight/repos/starlight-memory-vault`. A second checkout of the same remote is a defect `doctor` reports.
 - **Client Configurations**:
   - **Claude**: `claude mcp add` (connected)
   - **Codex**: `~/.codex/config.toml`
