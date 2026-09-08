@@ -74,6 +74,7 @@ export function fileToRecord(filePath, text, tenant = 'frank') {
   const { data, body } = parseFrontmatter(text);
   const base = path.basename(filePath, '.md');
   const memId = String(data.memory_id || data.name || base);
+  const explicitId = Boolean(data.memory_id || data.name);
   const declaredType = data.memory_type || (data.metadata && data.metadata.type) || null;
   return {
     memory_id: memId,
@@ -97,6 +98,7 @@ export function fileToRecord(filePath, text, tenant = 'frank') {
     provenance: [],
     provider_shadow_refs: {},
     _path: filePath,
+    _explicit_id: explicitId,
   };
 }
 
@@ -130,12 +132,44 @@ export async function loadVault(rootDir, tenant = 'frank') {
       if (e.isDirectory()) await walk(p);
       else if (e.name.endsWith('.md')) {
         const text = await fs.readFile(p, 'utf8');
-        if (/^---\r?\n/.test(text)) out.push(fileToRecord(p, text, tenant));
+        if (!text.trim()) continue;
+        // Files without frontmatter (every project's MEMORY.md index, READMEs,
+        // session notes) were invisible to recall. They index with defaults
+        // (private, semantic) and a summary from the first heading or line.
+        const rec = fileToRecord(p, text, tenant);
+        if (!/^---\r?\n/.test(text)) { rec._no_frontmatter = true; rec.summary = firstHeading(text) || firstLine(text); }
+        out.push(rec);
       }
     }
   }
   await walk(rootDir);
-  return out;
+  return disambiguateIds(out, rootDir);
+}
+
+/**
+ * Same-named files in different folders (every project has a MEMORY.md, and
+ * the same memory gets copied between projects with its frontmatter name)
+ * used to collapse onto one id, so recall surfaced one and forget deleted
+ * whichever was loaded first. Every colliding id becomes the vault-relative
+ * path, so no atom is ever shadowed; doctor still reports declared collisions
+ * because the author probably wanted one of them gone.
+ */
+export function disambiguateIds(records, rootDir) {
+  for (let pass = 0; pass < 3; pass++) {
+    const count = new Map();
+    for (const r of records) count.set(r.memory_id, (count.get(r.memory_id) || 0) + 1);
+    let changed = false;
+    for (const r of records) {
+      if (count.get(r.memory_id) < 2) continue;
+      if (r._declared_id === undefined) r._declared_id = r.memory_id;
+      const rel = path.relative(rootDir, r._path).replace(/\\/g, '/').replace(/\.md$/, '');
+      r.memory_id = r.memory_id === rel ? `${rel}#${pass + 1}` : rel;
+      r._id_from_path = true;
+      changed = true;
+    }
+    if (!changed) break;
+  }
+  return records;
 }
 
 export async function writeAtom(rootDir, writeDir, record) {
@@ -154,5 +188,6 @@ export async function deleteAtom(record) {
 }
 
 function firstLine(s) { return String(s || '').split(/\r?\n/).find((l) => l.trim())?.slice(0, 200) || ''; }
+function firstHeading(s) { const m = /^#{1,6}\s+(.+)$/m.exec(String(s || '')); return m ? m[1].trim().slice(0, 200) : ''; }
 function num(v, d) { const n = Number(v); return Number.isFinite(n) ? n : d; }
 function slug(s) { return String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48) || 'atom'; }

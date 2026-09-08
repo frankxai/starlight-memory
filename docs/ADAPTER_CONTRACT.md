@@ -1,20 +1,23 @@
-# Provider adapter contract
+# Provider Adapter Contract
 
 Every provider adapter in this package must satisfy the `MemoryProvider` interface and the resource doctrine in `resources.ts`.
 
-## Non-negotiable performance rule
+---
 
-Frank's target runtime is dozens of terminal agents on the same machine. A provider adapter must **not** assume one process per agent.
+## Non-negotiable Performance Rule
+
+Frank's target runtime is dozens of concurrent terminal agents on the same machine. A provider adapter must **not** assume one process per agent.
 
 Allowed shapes:
-
-- `embedded_lightweight` — safe in-process, small memory footprint, no heavy vector/graph server per agent.
-- `shared_daemon` — one local service per machine/tenant, all agents fan in through SIS.
+- `embedded_lightweight` — Safe in-process, small memory footprint, no heavy vector/graph server per agent.
+- `shared_daemon` — One local service per machine/tenant, all agents fan in through SIS.
 - `remote_api` — SaaS or self-hosted API with client-side batching/caching.
-- `shared_daemon_or_remote_api` — local singleton or remote mode.
-- `external_runtime` — bounded runtime workers only; never the canonical store.
+- `shared_daemon_or_remote_api` — Local singleton or remote mode.
+- `external_runtime` — Bounded runtime workers only; never the canonical store.
 
-## Required adapter metadata
+---
+
+## Required Adapter Metadata
 
 Each adapter must define `ProviderCapabilities`:
 
@@ -30,7 +33,9 @@ Each adapter must define `ProviderCapabilities`:
 }
 ```
 
-## Required methods
+---
+
+## Required Methods
 
 ```ts
 interface MemoryProvider {
@@ -42,21 +47,32 @@ interface MemoryProvider {
 }
 ```
 
-## Current concrete provider
+---
 
-- `InMemoryLocalCoreProvider` — test-only/dev-friendly local_core implementation. It proves the API and gives consumers a zero-dependency hot-path provider.
-- `Mem0RemoteProvider` — remote-only, client-injected Mem0 adapter. It buffers writes, flushes in batches, blocks secret/regulated records by default, and maps Mem0 IDs back into SIS provider-shadow refs.
+## Active Concrete Providers (July 2026 Ground Truth)
 
-## First external adapters to add
+1. **`LocalCoreProvider` (`local_core`)**:
+   - In-process, plaintext file-based system of record.
+   - Proves the API and gives consumers a zero-dependency, private local database.
+2. **`Mem0RemoteProvider` (`mem0`)**:
+   - Remote/local client-injected Mem0 adapter.
+   - Buffers writes, flushes in batches, blocks secret/regulated records, and maps Mem0 IDs back into provider-shadow references.
+3. **`HindsightProvider` (`hindsight`)**:
+   - Cloud or local daemon graph projection adapter.
+   - Integrates Vectorize.io Knowledge Graph (KG) retrieval and entity-resolution.
+4. **`HonchoProvider` (`honcho`)**:
+   - Local SQLite-backed Theory-of-Mind (ToM) peer-modeling adapter.
+   - Batches write flushes, gates privacy-classes, and provides dialectic recall. Subject to AGPL-3.0 copyleft.
 
-1. `hindsight` graph projection adapter — cloud or one shared local daemon.
-2. `supermemory` session/document ingest adapter — enterprise connector route only.
+---
 
-Built on SIP — provider adapter contract.
+## Evolution Notes
 
-## Evolution notes (2026-06-18)
+### 2026-07-12
+- Integrated `hindsight-provider` and `honcho-provider` under the `MemoryProvider` interface.
+- Verified all 4 providers in `eval/provider-recall.mjs` test suite. All tests passing green.
+- Wired the unified MCP server `src/mcp/server.mjs` directly to all 4 client harnesses.
 
-- Added Mem0RemoteProvider (remote_api, batched, privacy-first).
+### 2026-06-18
+- Added `Mem0RemoteProvider` (remote_api, batched, privacy-first).
 - Added fan-in benchmark proving 50 concurrent agent simulation with single lightweight provider.
-- Evolved package exports for subpath imports.
-- All adapters must still satisfy the resource doctrine in resources.ts.

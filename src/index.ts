@@ -6,3 +6,6 @@ export * from "./mem0-remote-provider.js";
 export * from "./honcho-provider.js";
 export * from "./hindsight-provider.js";
 export * from "./graphiti-projection-provider.js";
+export * from "./pglite-provider.js";
+export * from "./gbrain-provider.js";
+export * from "./code-symbol-index.js";

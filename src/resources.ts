@@ -109,6 +109,15 @@ export const DEFAULT_PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities>
     per_agent_instance_allowed: false,
     notes: "Agent runtime, not SIS memory authority. Run bounded workers, not per-shell background runtimes.",
   },
+  pglite_vector: {
+    provider: "pglite_vector",
+    process_model: "embedded_lightweight",
+    authority: "accelerator",
+    ram_profile: "low",
+    supports_batching: true,
+    per_agent_instance_allowed: true,
+    notes: "Embedded in-process PGLite/pgvector accelerator for sub-millisecond local semantic recall.",
+  },
 };
 
 export function estimateProviderResourcePlan(providers: ProviderName[]): ProviderResourcePlan {
