@@ -57,7 +57,9 @@
   "author": "FrankX <frank@frankx.ai>",
   "license": "MIT",
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.2.3",
+    "better-sqlite3": "^12.11.1",
     "tsx": "^4.21.0",
     "typescript": "^5.7.0"
   },

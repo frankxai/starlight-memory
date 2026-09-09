@@ -1,0 +1,56 @@
+{
+  "schema": "c940-wip-preservation/v1",
+  "repository": "starlight-memory",
+  "created_utc": "2026-09-09T19:33:43.274602+00:00",
+  "source_head": "32c8b85b4dbbf9e33fd1980a7791917edd7a810b",
+  "safe_remote_ancestor": "32c8b85b4dbbf9e33fd1980a7791917edd7a810b",
+  "status": "WIP-not-approved-for-integration",
+  "files": [
+    {
+      "path": "package.json",
+      "bytes": 1889,
+      "sha256": "8b20ffad533c7771b076d9e91c00efb66ba73f3d6e18bd7d9e9b139b9501ab9d"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 35498,
+      "sha256": "81c1dd4b6f58fa7fcab62960b64c8dc6a2f0a3abe896d447f43b7c400afdb9c3"
+    },
+    {
+      "path": "src/index.ts",
+      "bytes": 259,
+      "sha256": "f6f1381b61eb54732f3703fb84dafb156259684a63fa116b894515b4b74ebead"
+    },
+    {
+      "path": "src/mem0-remote-provider.ts",
+      "bytes": 7202,
+      "sha256": "f50c465ba094b5009518ed5e5359347830c42a354a8ca9ce0ad57d0f151a0011"
+    },
+    {
+      "path": "src/persistent-local-core-provider.ts",
+      "bytes": 4677,
+      "sha256": "a4b32959e49811d2c5689dd2f37370d95751a9d696cf41a4105ff78becac8272"
+    },
+    {
+      "path": "src/ttl-cache.ts",
+      "bytes": 1401,
+      "sha256": "fd7c2c853ca3076ec485d6f005567cf476320675f0f5b85438ab87aafe7dcdb8"
+    },
+    {
+      "path": "test/mem0-hardening.test.ts",
+      "bytes": 3371,
+      "sha256": "5b9aa5b7f955b892225ddbf261932f0de3a802312a150e200d26779f045651bc"
+    },
+    {
+      "path": "test/persistent-local-core.test.ts",
+      "bytes": 2562,
+      "sha256": "f8623bce6c0ce2419f20a180e0b8a1dec322ab422e7335b8f7c5e122456ac632"
+    }
+  ],
+  "restrictions": [
+    "No automatic merge/deploy/runtime activation",
+    "Known defects recorded in private tracker v2 handoff",
+    "Private local ancestry deliberately excluded",
+    "Other pending paths and private data remain separate recovery work"
+  ]
+}
