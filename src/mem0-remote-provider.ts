@@ -1,4 +1,5 @@
 import { DEFAULT_PROVIDER_CAPABILITIES } from "./resources.js";
+import { isExternalMirrorAllowed } from "./external-privacy.js";
 import type {
   ForgetRequest,
   MemoryProvider,
@@ -17,6 +18,7 @@ export interface Mem0Client {
 export interface Mem0RemoteProviderOptions {
   client: Mem0Client;
   flush_batch_size?: number;
+  allow_private_external_mirror?: boolean;
   allow_regulated_external_mirror?: boolean;
   provider_name?: string;
 }
@@ -32,12 +34,14 @@ export class Mem0RemoteProvider implements MemoryProvider {
   readonly capabilities: ProviderCapabilities = DEFAULT_PROVIDER_CAPABILITIES.mem0;
   private readonly client: Mem0Client;
   private readonly flushBatchSize: number;
+  private readonly allowPrivateExternalMirror: boolean;
   private readonly allowRegulatedExternalMirror: boolean;
   private readonly pending: PendingWrite[] = [];
 
   constructor(options: Mem0RemoteProviderOptions) {
     this.client = options.client;
     this.flushBatchSize = Math.max(1, options.flush_batch_size ?? 25);
+    this.allowPrivateExternalMirror = options.allow_private_external_mirror ?? false;
     this.allowRegulatedExternalMirror = options.allow_regulated_external_mirror ?? false;
   }
 
@@ -136,9 +140,10 @@ export class Mem0RemoteProvider implements MemoryProvider {
   }
 
   private isBlocked(record: SISMemoryRecord): boolean {
-    if (record.privacy_class === "secret") return true;
-    if (record.privacy_class === "regulated" && !this.allowRegulatedExternalMirror) return true;
-    return false;
+    return !isExternalMirrorAllowed(record.privacy_class, {
+      allowPrivateExternalMirror: this.allowPrivateExternalMirror,
+      allowRegulatedExternalMirror: this.allowRegulatedExternalMirror,
+    });
   }
 }
 
@@ -146,9 +151,7 @@ function metadataFor(record: SISMemoryRecord): Record<string, unknown> {
   return {
     sis_memory_id: record.memory_id,
     tenant_id: record.tenant_id,
-    workspace_id: record.workspace_id,
     memory_type: record.memory_type,
-    vault: record.vault,
     privacy_class: record.privacy_class,
     importance: record.importance,
     confidence: record.confidence,

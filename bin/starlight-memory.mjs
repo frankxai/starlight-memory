@@ -109,7 +109,7 @@ async function cmdDiscover() {
   console.log(`\n${n} memory dir(s). Add the ones you want to your config "targets".`);
 }
 
-async function cmdWire(cfg) {
+async function cmdWire(cfg, { repairBroken = false, repointExisting = false } = {}) {
   for (const t of cfg.targets) {
     const memDir = resolveAgentMemDir(t);
     const vaultSub = path.join(cfg.vault, t.name);
@@ -119,7 +119,12 @@ async function cmdWire(cfg) {
     if (kind === 'link') {
       const tgt = await linkTarget(memDir);
       if (tgt && path.resolve(tgt) === path.resolve(vaultSub)) { ok(`${t.name}: already linked`); continue; }
-      die(`${t.name}: ${memDir} is a link to ${tgt}, not the vault. Remove it first.`);
+      if ((repairBroken && tgt && !existsSync(tgt)) || repointExisting) {
+        await fs.unlink(memDir);
+        info(`${t.name}: removed existing link to ${tgt}; target contents were left untouched`);
+      } else {
+        die(`${t.name}: ${memDir} is a link to ${tgt}, not the vault. Use --repair-broken for a missing target or --repoint-existing after syncing the old target.`);
+      }
     }
     if (kind === 'dir') {
       await copyDirInto(memDir, vaultSub);          // preserve existing memory into the vault
@@ -241,6 +246,8 @@ Usage: starlight-memory <command> [--config <path>]
 
   discover   list this machine's Claude memory dirs (to fill config targets)
   wire       symlink each target's memory dir into the vault (cross-OS, no admin)
+             add --repair-broken to replace only links whose targets do not exist
+             add --repoint-existing to retarget links after the old vault is synced
   unwire     restore memory dirs to real folders (reverses wire)
   status     show link state + git status
   sync       git pull --rebase, then commit + push any changes
@@ -263,11 +270,13 @@ Each target may use "workspace" (Claude dir is computed) or an explicit "memoryD
 // ---- main ----------------------------------------------------------------------
 const [cmd, ...rest] = process.argv.slice(2);
 const cfgFlag = (() => { const i = rest.indexOf('--config'); return i >= 0 ? rest[i + 1] : null; })();
+const repairBroken = rest.includes('--repair-broken');
+const repointExisting = rest.includes('--repoint-existing');
 
 (async () => {
   switch (cmd) {
     case 'discover': return cmdDiscover();
-    case 'wire': return cmdWire(await loadConfig(cfgFlag));
+    case 'wire': return cmdWire(await loadConfig(cfgFlag), { repairBroken, repointExisting });
     case 'unwire': return cmdUnwire(await loadConfig(cfgFlag));
     case 'status': return cmdStatus(await loadConfig(cfgFlag));
     case 'sync': return cmdSync(await loadConfig(cfgFlag));

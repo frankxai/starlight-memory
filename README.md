@@ -23,7 +23,7 @@ Canonical SIS/local vault
 | Capability | Current evidence | Boundary |
 |---|---|---|
 | Local-first routing | Implemented and test-covered | Providers never become canonical |
-| Optional Graphiti projection | Injected shared-client adapter with privacy, retry, and tenant tests | No Graphiti deployment is claimed |
+| Optional Graphiti projection | Injected shared-client adapter with privacy, durable sanitized outbox, retry, and tenant tests | No Graphiti deployment is claimed |
 | Signed cloud projection | Local exporter/gateway integration tests | Not a hosted service |
 | Remote MCP recall | Authenticated local integration test | Production rollout remains gated |
 
@@ -65,7 +65,7 @@ Start with:
 - **SIS/local_core is authoritative.** External systems are adapters, accelerators, or runtime integrations.
 - **Provider IDs are secondary indexes.** SIS owns `memory_id`, provenance, privacy class, retention, and trust.
 - **Dozens of agents per machine is the target environment.** Heavy providers must run as shared daemons or remote APIs — never one provider runtime per terminal coding agent.
-- **Cloud writes are derived/mirrored by policy.** Sensitive memory stays local unless explicit tenant policy allows otherwise.
+- **Cloud writes are derived/mirrored by policy.** `private` stays local by default; `private-shareable` is the explicit projection class. `secret` never leaves local core.
 - **Evaluation decides defaults.** Providers earn default status through recall quality, latency, contradiction rate, cost, privacy, and exportability.
 
 ## Cross-machine sync CLI (`starlight-memory`)
@@ -123,7 +123,13 @@ A zero-dependency local provider that implements the adapter contract for tests,
 
 ### `Mem0RemoteProvider`
 
-A remote-only, client-injected Mem0 adapter. It queues writes, flushes batches, blocks `secret` / `regulated` records by default, and maps Mem0 result IDs back into SIS `provider_shadow_refs` without making Mem0 canonical.
+A remote-only, client-injected Mem0 adapter. It queues writes, flushes batches, blocks `private` / `secret` / `regulated` records by default, and maps Mem0 result IDs back into SIS `provider_shadow_refs` without making Mem0 canonical.
+
+### `GraphitiProjectionProvider`
+
+An optional temporal graph projection behind one injected shared client. Remote mode accepts only `public` and `private-shareable` records by default, emits a minimal metadata allowlist, bounds tenant-scoped recall, and keeps local core authoritative. `private` records require either an explicit `local_shared_daemon` deployment or a tenant external-mirror opt-in.
+
+Use `JsonFileGraphitiProjectionOutbox` on the shared gateway to make projection and deletion retries restart-safe. The outbox stores only the already-approved episode text plus canonical IDs; it never serializes a full `SISMemoryRecord`, raw vault content, entities, or relations.
 
 ## Adapter contract
 
@@ -169,5 +175,7 @@ await mem0.flush(); // explicit batch
 
 // Fan-in safe: dozens of agents route through one instance
 ```
+
+When moving an existing memory-vault clone into the canonical estate, sync the old clone first and then run `starlight-memory wire --repoint-existing`. The command replaces only the junction; the previous target directory is left untouched.
 
 See tests for full patterns and the fan-in benchmark.

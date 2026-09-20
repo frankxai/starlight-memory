@@ -1,4 +1,5 @@
 import { DEFAULT_PROVIDER_CAPABILITIES } from "./resources.js";
+import { isExternalMirrorAllowed } from "./external-privacy.js";
 import type {
   ForgetRequest,
   MemoryProvider,
@@ -58,6 +59,8 @@ export interface HonchoProviderOptions {
   flush_batch_size?: number;
   allow_external_mirror?: boolean;
   allowExternalMirror?: boolean;
+  allow_private_external_mirror?: boolean;
+  allowPrivateExternalMirror?: boolean;
   peer_id?: string;
   session_id?: string;
 }
@@ -76,6 +79,7 @@ export class HonchoProvider implements MemoryProvider {
   private readonly client: HonchoClient;
   private readonly flushBatchSize: number;
   private readonly allowExternalMirror: boolean;
+  private readonly allowPrivateExternalMirror: boolean;
   private readonly defaultPeerId?: string;
   private readonly defaultSessionId?: string;
   private readonly pending: PendingTurn[] = [];
@@ -85,6 +89,8 @@ export class HonchoProvider implements MemoryProvider {
     this.flushBatchSize = Math.max(1, options.flush_batch_size ?? 25);
     this.allowExternalMirror =
       options.allowExternalMirror ?? options.allow_external_mirror ?? false;
+    this.allowPrivateExternalMirror =
+      options.allowPrivateExternalMirror ?? options.allow_private_external_mirror ?? false;
     this.defaultPeerId = options.peer_id;
     this.defaultSessionId = options.session_id;
   }
@@ -204,10 +210,10 @@ export class HonchoProvider implements MemoryProvider {
   }
 
   private isBlocked(record: SISMemoryRecord): boolean {
-    return (
-      (record.privacy_class === "secret" || record.privacy_class === "regulated") &&
-      !this.allowExternalMirror
-    );
+    return !isExternalMirrorAllowed(record.privacy_class, {
+      allowPrivateExternalMirror: this.allowPrivateExternalMirror,
+      allowRegulatedExternalMirror: this.allowExternalMirror,
+    });
   }
 }
 
@@ -215,10 +221,7 @@ function metadataFor(record: SISMemoryRecord): Record<string, unknown> {
   return {
     sis_memory_id: record.memory_id,
     tenant_id: record.tenant_id,
-    workspace_id: record.workspace_id,
-    agent_id: record.agent_id,
     memory_type: record.memory_type,
-    vault: record.vault,
     privacy_class: record.privacy_class,
     importance: record.importance,
     confidence: record.confidence,

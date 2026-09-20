@@ -1,4 +1,12 @@
 import { DEFAULT_PROVIDER_CAPABILITIES } from "./resources.js";
+import { isExternalMirrorAllowed } from "./external-privacy.js";
+import {
+  emptyGraphitiProjectionOutboxState,
+  type GraphitiEpisodeInput,
+  type GraphitiProjectionOutbox,
+  type GraphitiQueuedDelete,
+  type GraphitiQueuedProjection,
+} from "./graphiti-projection-outbox.js";
 import type {
   ForgetRequest,
   MemoryProvider,
@@ -13,14 +21,7 @@ import type {
  * this package remains dependency-free and never creates a Graphiti runtime.
  */
 export interface GraphitiClient {
-  addEpisode(input: {
-    group_id: string;
-    name: string;
-    episode_body: string;
-    source: "message" | "text" | "json";
-    reference_time?: string;
-    metadata: Record<string, unknown>;
-  }): Promise<{ id: string }>;
+  addEpisode(input: GraphitiEpisodeInput): Promise<{ id: string }>;
   searchFacts(input: {
     query: string;
     group_ids: string[];
@@ -40,18 +41,13 @@ export interface GraphitiClient {
 export interface GraphitiProjectionProviderOptions {
   client: GraphitiClient;
   flush_batch_size?: number;
+  /** Remote is fail-closed; private records may use an explicitly local daemon. */
+  deployment?: "local_shared_daemon" | "remote_api";
+  allowPrivateExternalMirror?: boolean;
   /** Required only for regulated data; secret data is never externally mirrored. */
   allowExternalMirror?: boolean;
-}
-
-interface PendingProjection {
-  record: SISMemoryRecord;
-  input: Parameters<GraphitiClient["addEpisode"]>[0];
-}
-
-interface PendingDelete {
-  tenant_id: string;
-  memory_id: string;
+  /** Optional durable, sanitized queue owned by the one shared gateway. */
+  outbox?: GraphitiProjectionOutbox;
 }
 
 /**
@@ -64,19 +60,28 @@ export class GraphitiProjectionProvider implements MemoryProvider {
   readonly capabilities: ProviderCapabilities = DEFAULT_PROVIDER_CAPABILITIES.graphiti;
   private readonly client: GraphitiClient;
   private readonly flushBatchSize: number;
+  private readonly deployment: "local_shared_daemon" | "remote_api";
+  private readonly allowPrivateExternalMirror: boolean;
   private readonly allowExternalMirror: boolean;
-  private pending: PendingProjection[] = [];
-  private pendingDeletes: PendingDelete[] = [];
+  private readonly outbox?: GraphitiProjectionOutbox;
+  private pending: GraphitiQueuedProjection[] = [];
+  private pendingDeletes: GraphitiQueuedDelete[] = [];
   private readonly tombstoned = new Set<string>();
   private readonly inFlight = new Set<string>();
+  private hydratePromise?: Promise<void>;
+  private persistChain: Promise<void> = Promise.resolve();
 
   constructor(options: GraphitiProjectionProviderOptions) {
     this.client = options.client;
     this.flushBatchSize = Math.max(1, options.flush_batch_size ?? 25);
+    this.deployment = options.deployment ?? "remote_api";
+    this.allowPrivateExternalMirror = options.allowPrivateExternalMirror ?? false;
     this.allowExternalMirror = options.allowExternalMirror ?? false;
+    this.outbox = options.outbox;
   }
 
   async remember(record: SISMemoryRecord): Promise<SISMemoryRecord> {
+    await this.ensureHydrated();
     if (this.isBlocked(record)) {
       return withGraphitiRef(record, {
         provider_record_id: "blocked_by_policy",
@@ -97,7 +102,8 @@ export class GraphitiProjectionProvider implements MemoryProvider {
     }
 
     this.pending.push({
-      record,
+      tenant_id: record.tenant_id,
+      memory_id: record.memory_id,
       input: {
         group_id: record.tenant_id,
         name: record.memory_id,
@@ -107,6 +113,7 @@ export class GraphitiProjectionProvider implements MemoryProvider {
         metadata: metadataFor(record),
       },
     });
+    await this.persist();
 
     return withGraphitiRef(record, {
       provider_record_id: "pending",
@@ -117,8 +124,9 @@ export class GraphitiProjectionProvider implements MemoryProvider {
   }
 
   async flush(): Promise<{ attempted: number; written: number; failed: number }> {
+    await this.ensureHydrated();
     const deleteBatch = this.pendingDeletes.splice(0, this.flushBatchSize);
-    const retryDeletes: PendingDelete[] = [];
+    const retryDeletes: GraphitiQueuedDelete[] = [];
     let written = 0;
     let failed = 0;
     for (const pendingDelete of deleteBatch) {
@@ -127,7 +135,10 @@ export class GraphitiProjectionProvider implements MemoryProvider {
           group_id: pendingDelete.tenant_id,
           sis_memory_id: pendingDelete.memory_id,
         });
-        if (deleted) written++;
+        if (deleted) {
+          written++;
+          this.tombstoned.delete(projectionKey(pendingDelete.tenant_id, pendingDelete.memory_id));
+        }
         else { retryDeletes.push(pendingDelete); failed++; }
       } catch {
         retryDeletes.push(pendingDelete);
@@ -138,10 +149,10 @@ export class GraphitiProjectionProvider implements MemoryProvider {
 
     const capacity = this.flushBatchSize - deleteBatch.length;
     const batch = capacity > 0 ? this.pending.splice(0, capacity) : [];
-    for (const projection of batch) this.inFlight.add(projectionKey(projection.record.tenant_id, projection.record.memory_id));
-    const retry: PendingProjection[] = [];
+    for (const projection of batch) this.inFlight.add(projectionKey(projection.tenant_id, projection.memory_id));
+    const retry: GraphitiQueuedProjection[] = [];
     for (const projection of batch) {
-      const key = projectionKey(projection.record.tenant_id, projection.record.memory_id);
+      const key = projectionKey(projection.tenant_id, projection.memory_id);
       try {
         if (this.tombstoned.has(key)) continue;
         await this.client.addEpisode(projection.input);
@@ -149,16 +160,21 @@ export class GraphitiProjectionProvider implements MemoryProvider {
         // the add completes so a tombstone can never be resurrected by ordering.
         if (this.tombstoned.has(key)) {
           const deleted = await this.client.deleteByMemoryId({
-            group_id: projection.record.tenant_id,
-            sis_memory_id: projection.record.memory_id,
+            group_id: projection.tenant_id,
+            sis_memory_id: projection.memory_id,
           });
-          if (deleted) written++;
-          else { this.enqueueDelete(projection.record.tenant_id, projection.record.memory_id); failed++; }
+          if (deleted) {
+            written++;
+            this.tombstoned.delete(key);
+          } else {
+            this.enqueueDelete(projection.tenant_id, projection.memory_id);
+            failed++;
+          }
         } else {
           written++;
         }
       } catch {
-        if (this.tombstoned.has(key)) this.enqueueDelete(projection.record.tenant_id, projection.record.memory_id);
+        if (this.tombstoned.has(key)) this.enqueueDelete(projection.tenant_id, projection.memory_id);
         else retry.push(projection);
         failed++;
       } finally {
@@ -166,7 +182,13 @@ export class GraphitiProjectionProvider implements MemoryProvider {
       }
     }
     if (retry.length) this.pending.unshift(...retry);
+    await this.persist();
     return { attempted: deleteBatch.length + batch.length, written, failed };
+  }
+
+  async hydrate(): Promise<number> {
+    await this.ensureHydrated();
+    return this.pendingCount();
   }
 
   pendingCount(): number {
@@ -174,6 +196,7 @@ export class GraphitiProjectionProvider implements MemoryProvider {
   }
 
   async recall(request: RecallRequest): Promise<RecallResult[]> {
+    await this.ensureHydrated();
     const { query, limit } = boundedRecallRequest(request);
     const rows = await this.client.searchFacts({
       query,
@@ -197,31 +220,68 @@ export class GraphitiProjectionProvider implements MemoryProvider {
   }
 
   async forget(request: ForgetRequest): Promise<boolean> {
+    await this.ensureHydrated();
     const key = projectionKey(request.tenant_id, request.memory_id);
     this.tombstoned.add(key);
     // A tombstoned canonical record must not be resurrected by a later flush.
-    this.pending = this.pending.filter(({ record }) => !(
-      record.tenant_id === request.tenant_id && record.memory_id === request.memory_id
+    this.pending = this.pending.filter((projection) => !(
+      projection.tenant_id === request.tenant_id && projection.memory_id === request.memory_id
     ));
-    const pendingDelete = { tenant_id: request.tenant_id, memory_id: request.memory_id };
+    this.enqueueDelete(request.tenant_id, request.memory_id);
+    await this.persist();
     try {
       const deleted = await this.client.deleteByMemoryId({
         group_id: request.tenant_id,
         sis_memory_id: request.memory_id,
       });
-      if (deleted) return true;
+      if (deleted) {
+        this.pendingDeletes = this.pendingDeletes.filter((item) => !(
+          item.tenant_id === request.tenant_id && item.memory_id === request.memory_id
+        ));
+        if (!this.inFlight.has(key)) this.tombstoned.delete(key);
+        await this.persist();
+        return true;
+      }
     } catch {
-      // The canonical tombstone still wins. Retain an in-process retry; SIS is
-      // responsible for durable outbox/reconciliation across process restarts.
+      // The canonical tombstone still wins; the outbox retains the retry.
     }
-    this.enqueueDelete(pendingDelete.tenant_id, pendingDelete.memory_id);
     return false;
   }
 
+  private async ensureHydrated(): Promise<void> {
+    if (!this.hydratePromise) {
+      this.hydratePromise = (async () => {
+        if (!this.outbox) return;
+        const state = await this.outbox.load();
+        this.pending = state.projections;
+        this.pendingDeletes = state.deletes;
+        this.tombstoned.clear();
+        for (const key of state.tombstones) this.tombstoned.add(key);
+      })();
+    }
+    await this.hydratePromise;
+  }
+
+  private async persist(): Promise<void> {
+    const outbox = this.outbox;
+    if (!outbox) return;
+    const state = emptyGraphitiProjectionOutboxState();
+    state.projections = structuredClone(this.pending);
+    state.deletes = structuredClone(this.pendingDeletes);
+    state.tombstones = [...this.tombstoned].sort();
+    const queued = this.persistChain.then(() => outbox.save(state));
+    this.persistChain = queued.catch(() => undefined);
+    await queued;
+  }
+
   private isBlocked(record: SISMemoryRecord): boolean {
-    return record.privacy_class === "secret" || (
-      record.privacy_class === "regulated" && !this.allowExternalMirror
-    );
+    if (record.privacy_class === "private" && this.deployment === "local_shared_daemon") {
+      return false;
+    }
+    return !isExternalMirrorAllowed(record.privacy_class, {
+      allowPrivateExternalMirror: this.allowPrivateExternalMirror,
+      allowRegulatedExternalMirror: this.allowExternalMirror,
+    });
   }
 }
 
@@ -245,16 +305,11 @@ function metadataFor(record: SISMemoryRecord): Record<string, unknown> {
   return {
     sis_memory_id: record.memory_id,
     tenant_id: record.tenant_id,
-    workspace_id: record.workspace_id,
-    agent_id: record.agent_id,
     memory_type: record.memory_type,
-    vault: record.vault,
     privacy_class: record.privacy_class,
     importance: record.importance,
     confidence: record.confidence,
     trust: record.trust,
-    entities: record.entities,
-    relations: record.relations,
   };
 }
 
