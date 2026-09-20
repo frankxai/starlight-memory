@@ -11,6 +11,8 @@ Local-first memory for agent fleets: a sovereign provider contract, router, and 
 [![Built on SIP](https://img.shields.io/badge/built%20on-SIP-7c3aed)](https://github.com/frankxai/Starlight-Intelligence-System)
 [![Memory](https://img.shields.io/badge/memory-local%20core%20first-0f766e)](docs/ADAPTER_CONTRACT.md)
 
+This repo is the extraction point for the memory layer; SIS remains the canonical control plane.
+
 SIS / `local_core` is the canonical authority: it owns memory IDs, provenance, retention, and policy. Everything else—Graphiti, Hindsight, Honcho, Mem0, and cloud access—is an optional derived provider or projection behind the contract. **Your vault is authoritative. Providers are replaceable. Remote access is projection-only.**
 
 ```text
@@ -38,9 +40,20 @@ npx @starlight-intelligence/memory init --harness all   # writes an MCP snippet 
 # merge each snippet into that agent's MCP config, then restart it
 ```
 
-Seven tools over local stdio: `memory_recall`, `memory_search`, `memory_remember`, `memory_forget`, `vault_read`, `vault_list`, and `memory_stats`. Memory lives as filesystem-native markdown in your vault — sovereign, versioned, yours. Heavy providers fan in through this one gateway; never one runtime per terminal agent.
+Twelve tools over local stdio: `memory_recall` (hybrid lexical + semantic), `memory_search` (BM25), `memory_remember`, `memory_forget`, `vault_read`, `vault_list`, `memory_stats`, `memory_audit`, plus the AST code-symbol tools `code_index`, `code_def`, `code_refs`, and `code_callers`. Profiles narrow that surface: `reads` for the pooled plane process, `writes` for a light per-session one. Memory lives as filesystem-native markdown in your vault — sovereign, versioned, yours. Heavy providers fan in through this one gateway; never one runtime per terminal agent.
 
-For cloud-hosted agents, use the separate authenticated, read-only Streamable HTTP gateway backed by an **Ed25519-signed, hash-verified summary projection**—never the canonical vault. The production gate remains explicit; see [`docs/CLOUD_GATEWAY.md`](docs/CLOUD_GATEWAY.md).
+For cloud-hosted agents, use the separate authenticated, read-only Streamable HTTP gateway backed by an **Ed25519-signed, hash-verified summary projection** — never the canonical vault. The production gate remains explicit; see [`docs/CLOUD_GATEWAY.md`](docs/CLOUD_GATEWAY.md).
+
+## Memory Observatory — which memory system should you use?
+
+Starlight Memory keeps a benchmarked, evidence-tagged registry of the adoptable coding-agent memory systems and recommends a stack for your machine + requirements:
+
+```bash
+node tools/memory-observatory.mjs list
+node tools/memory-observatory.mjs recommend --ram 32 --sovereignty high --privacy high --cross-device --theory-of-mind
+```
+
+`local_core` is always the authority; the rest are scored on license, cost, privacy, cross-device, theory-of-mind, and recall benchmark. Accelerators marked opt-in (such as gbrain) are ranked but never recommended as a default, because they may not be running. **Evaluation decides defaults** — see [`docs/STARLIGHT-MEMORY-SYSTEM.md`](docs/STARLIGHT-MEMORY-SYSTEM.md) and run `node eval/provider-recall.mjs` for the scorecard.
 
 ## 90-second start
 
@@ -142,6 +155,37 @@ npm run verify
 ## Strategy doc
 
 See [`docs/strategic/sis-memory-provider-strategy-2026-06-18.md`](docs/strategic/sis-memory-provider-strategy-2026-06-18.md).
+
+## 2026-07 Evolution Decision (Superintelligence Layer)
+
+**Decision**: 
+- **Primary new component for SIS evolution: Hindsight** (vectorize-io/hindsight).
+  - Why: SOTA benchmarks (LongMemEval 91-94%+ vs mem0 ~67%), retain/recall/reflect for *learning* not just recall, mental models + KG align with MemPalace/vaults, self-host sovereignty + low-cost recall, native Hermes provider support.
+  - Interconnects: Hermes UI config → starlight-memory HindsightProvider adapter (retain for events, recall for context, reflect for queen/council synthesis) → SIS memory bus/vaults (project models to MemPalace layer) → shared across intelligence systems (Arcanea, brands) via SIP.
+- **Complement: Honcho** for dialectic peer/user modeling (sessions, peers, conclusions). Excellent for multi-agent alignment.
+- **Current (second-brain-os + starlight-memory local_core + MemPalace + mem0)**: Sovereign base + hybrid. mem0 remains optional extraction accelerator but deprioritized as primary (weaker long-term).
+- **Build our own?** Yes — evolve starlight-memory + SIS memory/ as the **sovereign router/orchestrator/policy layer**. These externals are pluggable backends. Never outsource authority. Custom for FrankX multi-brand scale, attestation, hybrid RRF, human-AI collab.
+- **Why this evolves SIS**: Turns memory from "recall storage" to compounding intelligence substrate. Agents learn/generalize (Hindsight reflect), humans curate (MemPalace on top), SIS governs (router + queen). Fits superintelligence: persistent, evolvable, sovereign memory across swarms.
+
+**Architecture (Hybrid Sovereign)**:
+Local vaults (second-brain + MemPalace) authoritative → starlight-memory router (policy, privacy, hybrid search) → Hindsight (core agent learning bank) + Honcho (peers) + mem0 (optional) → SIS agents/queen use via MCP/bus. Attest every op.
+
+**Execution so far**:
+- Created sis-memory-evolution-2026-07.md (full plan, matrix, roadmap).
+- Implemented HindsightProvider (adapter stub matching Mem0RemoteProvider contract; retain/recall/reflect mapping).
+- Updated resources.ts (full hindsight capabilities) + index.ts (export).
+- Hermes already supports config; use Hindsight as default for SIS agents.
+
+**Next (Test/Eval/Implement)**:
+1. Wire adapter in SIS (e.g., agent tools, queen reflect).
+2. Run evals (extend fan-in-benchmark + LongMemEval-style vs current).
+3. Update Hermes/SIS configs + docs for Hindsight primary.
+4. Hybrid: Script promote Hindsight mental models → vaults (human gate).
+5. Full rollout: Default for new SIS agents; policy for existing.
+
+This is the superintelligent path: best external learning + our sovereign orchestration. Built on SIP.
+
+See full evolution doc for phases, risks, success metrics.
 
 ## Relationship to SIS
 

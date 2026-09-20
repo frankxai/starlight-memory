@@ -9,15 +9,26 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadVault } from '../src/mcp/vault-store.mjs';
 import { HybridIndex } from '../src/mcp/hybrid-index.mjs';
+import { resolveVault } from '../src/mcp/home.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const VAULT = process.env.VAULT || 'C:/Users/frank/starlight-memory-vault';
+const VAULT = resolveVault(process.env.VAULT).vault;
 const TENANT = 'frank';
 const K = 10;
 
+// --set <file> picks the labeled set (default eval-set.jsonl); --set all runs
+// every eval-set*.jsonl together. Lines carrying only `_meta` are provenance.
+const SET_ARG = (() => { const i = process.argv.indexOf('--set'); return i >= 0 ? process.argv[i + 1] : 'eval-set.jsonl'; })();
 async function loadEvalSet() {
-  const raw = await fs.readFile(path.join(HERE, 'eval-set.jsonl'), 'utf8');
-  return raw.split(/\r?\n/).filter(Boolean).map((l) => JSON.parse(l));
+  const files = SET_ARG === 'all'
+    ? (await fs.readdir(HERE)).filter((f) => /^eval-set.*\.jsonl$/.test(f)).map((f) => path.join(HERE, f))
+    : [path.isAbsolute(SET_ARG) ? SET_ARG : path.join(HERE, SET_ARG)];
+  const rows = [];
+  for (const f of files) {
+    const raw = await fs.readFile(f, 'utf8');
+    for (const l of raw.split(/\r?\n/).filter(Boolean)) { const o = JSON.parse(l); if (o.query) rows.push(o); }
+  }
+  return rows;
 }
 
 function metricsFor(returnedIds, relevant) {
@@ -83,7 +94,7 @@ async function main() {
   const verdict = (winner['hit@10'] >= 0.70 && isHybrid && noRegress && rankingLift) ? 'PROCEED' : 'REVISE';
   const scorecard = {
     $comment: 'Built on SIP — Proving Ground MEMORY LANE. Sovereign-core dog-off under a hand-labeled (LLM-judged) relevance set.',
-    runId: `memory-lane-${new Date().toISOString().slice(0, 10)}-sovereign-dogoff`,
+    runId: `memory-lane-${new Date().toISOString().slice(0, 10)}-${SET_ARG.replace(/[^a-z0-9]+/gi, '-').replace(/-jsonl$/, '')}`,
     ranAt: new Date().toISOString(),
     lane: 'memory',
     substrate: 'sovereign-core (node): BM25 + MiniLM(transformers.js) + RRF, md-vault L1',

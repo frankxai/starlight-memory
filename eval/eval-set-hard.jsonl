@@ -1,0 +1,31 @@
+{"query": "my commit just silently did nothing from git bash, no error", "relevant": ["security-git-hooks-die-without-fnm-env", "fnm-cd-hook-breaks-bash-chains"]}
+{"query": "before I charge anyone money for a new product, what actually has to be true first", "relevant": ["craft-bar-overdeliver", "waitlist-first-demand-capture"]}
+{"query": "a PR shows every check green but GitHub still refuses to let it merge", "relevant": ["required-checks-that-never-report"]}
+{"query": "can an admin still force a frankx.ai PR through branch protection", "relevant": ["frankx-pr-self-approval-deadlock"]}
+{"query": "I added an A/B test cookie file and the whole build died", "relevant": ["next16-proxy-not-middleware"]}
+{"query": "two agents keep fighting over the same dev server and one always dies", "relevant": ["next16-one-dev-server-per-directory"]}
+{"query": "a buyer clicks pay and nothing happens, no error anywhere in the logs", "relevant": ["checkout-sku-mismatch-404s-silently"]}
+{"query": "the queen dispatcher just goes quiet with nothing in the logs", "relevant": ["ram-is-the-real-ceiling-on-autonomous-ops", "ram-starvation-kills-s4u-scheduled-runs"]}
+{"query": "scheduled tasks all report Running but nothing is actually executing", "relevant": ["scheduled-task-launch-traps-windows"]}
+{"query": "a queen card failed in two minutes with almost no output, why", "relevant": ["headless-queen-workers-die-not-logged-in"]}
+{"query": "the loop fleet was dead over a week and the monitor still said healthy", "relevant": ["healthwatch-scored-disabled-tasks-healthy"]}
+{"query": "can I trust a heartbeat file just because it says status ok", "relevant": ["heartbeat-status-must-be-derived"]}
+{"query": "hermes desktop is stuck waiting on the backend port forever", "relevant": ["hermes-single-owner-topology"]}
+{"query": "can arcanea actually take someone's money right now", "relevant": ["polar-mcp-live-2026-08-29", "arcanea-commerce-dead-2026-08-08"]}
+{"query": "should we bolt a wallet provider onto checkout next to polar", "relevant": ["privy-assessed-not-a-selling-rail-2026-08"]}
+{"query": "make sure my brother's three energy sites don't end up looking identical again", "relevant": ["rial-three-brand-differentiation"]}
+{"query": "what's the current plan for the aurevia shop and who's the merchant of record", "relevant": ["aurevia-forge-pivot-2026-08-19"]}
+{"query": "should a brand new starlight page default to a dark command-center look", "relevant": ["sis-brand-foundation-reset"]}
+{"query": "can I use the old frankx brand pack doc as the source for this page's design", "relevant": ["brand-packs-frozen-2026-08-17"]}
+{"query": "what's the tool for getting Frank's sign-off on a poster mockup he can tweak himself", "relevant": ["design-canvas-is-the-founder-gate"]}
+{"query": "why does this new page feel like a generic AI SaaS template", "relevant": ["frankx-typography-doctrine"]}
+{"query": "I built pages for three different brands and somehow they look the same", "relevant": ["brands-converge-on-the-right-rail"]}
+{"query": "recall works but nothing I write down today shows up in tomorrow's session", "relevant": ["two-vaults-one-remote-2026-09-02"]}
+{"query": "the memory graph on the site looks great, but is it showing my real vault", "relevant": ["starlight-memory-viz-data-gap"]}
+{"query": "can I just wire trusted publishing for a package that's never been on npm before", "relevant": ["npm-release-foundation-2026-08"]}
+{"query": "is it still true I can't build locally and have to push everything through CI", "relevant": ["pnpm-store-corruption-2026-07-19"]}
+{"query": "the backup drive filled up overnight for no obvious reason", "relevant": ["restic-prune-hazard-2026-08-03"]}
+{"query": "why can't we post to social yet even though the storage buckets exist", "relevant": ["media-plane-blocked-on-r2-2026-09-02"]}
+{"query": "I finished a long handover doc, how should I actually get it in front of Frank", "relevant": ["feedback-file-review"]}
+{"query": "I finished a page in the private repo, do I stop there or push it further", "relevant": ["feedback-ship-to-production-fast"]}
+{"_meta": {"written": "2026-09-03", "method": "hand-labeled by reading atoms; queries paraphrased to avoid lexical overlap", "count": 30}}
