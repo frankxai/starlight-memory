@@ -7,7 +7,7 @@
 //   - paths are computed per-machine from a shared, logical-name config
 //   - sync is plain git (any remote), no OS scheduler, no gh dependency
 //
-// Commands: discover | wire | unwire | status | sync | register | doctor | mcp serve | help
+// Commands: discover | wire | unwire | status | sync | register | doctor | import | mcp serve | help
 import { promises as fs } from 'node:fs';
 import { existsSync } from 'node:fs';
 import os from 'node:os';
@@ -336,6 +336,32 @@ async function cmdExportCloud(cfg, rest) {
   info(`${result.excluded_records} records excluded by privacy policy (public only unless --allow-private-shareable is explicitly set).`);
 }
 
+async function cmdImport(rest) {
+  const { runImport, DEFAULT_SOURCES } = await import('../src/mcp/import-stores.mjs');
+  const flag = (name) => { const i = rest.indexOf(name); return i >= 0 ? rest[i + 1] : null; };
+  const { vault, source } = resolveVault(flag('--vault'));
+  if (!existsSync(vault)) die(`vault not found at ${vault} (from ${source})`);
+  const out = flag('--out');
+  const sources = {
+    bus: flag('--bus') || DEFAULT_SOURCES.bus,
+    sisDir: flag('--sis-dir') || DEFAULT_SOURCES.sisDir,
+    grokDir: flag('--grok-dir') || DEFAULT_SOURCES.grokDir,
+  };
+  const report = await runImport({ vault, out, sources, includeGrokArchive: rest.includes('--include-grok-archive') });
+  if (rest.includes('--json')) { console.log(JSON.stringify(report, null, 2)); return; }
+  console.log(`import into vault ${vault} (${report.vaultAtoms} atoms, from ${source})${out ? `  →  staged at ${path.resolve(out)}` : '  (dry run)'}\n`);
+  const cols = ['read', 'kept', 'dup', 'skipped-trivial', 'skipped-secret'];
+  console.log('source'.padEnd(18) + cols.map((c) => c.padStart(16)).join(''));
+  const total = Object.fromEntries(cols.map((c) => [c, 0]));
+  for (const [name, row] of Object.entries(report.counts)) {
+    console.log(name.padEnd(18) + cols.map((c) => String(row[c]).padStart(16)).join(''));
+    for (const c of cols) total[c] += row[c];
+  }
+  console.log('total'.padEnd(18) + cols.map((c) => String(total[c]).padStart(16)).join(''));
+  for (const [name, row] of Object.entries(report.counts)) if (Object.keys(row.reasons).length) info(`${name}: ${Object.entries(row.reasons).map(([k, v]) => `${k}=${v}`).join('  ')}`);
+  if (!out) console.log('\nDry run: nothing written. Re-run with --out <dir> to stage atoms for review.');
+}
+
 function help() {
   console.log(`starlight-memory — portable memory vault: wiring, sync, and cross-agent MCP
 
@@ -356,6 +382,9 @@ Usage: starlight-memory <command> [--config <path>]
   mcp export-cloud
              build a privacy-filtered, summary-only, signed projection for the cloud gateway
              [--vault --out --tenant --signing-key-env] [--allow-private-shareable]
+  import     fold memory-bus, SIS vault JSONL and Grok memory-v2 into vault atoms, deduped by
+             content hash, secrets skipped; dry run unless --out <dir> (never inside the vault)
+             [--vault --bus --sis-dir --grok-dir --include-grok-archive --json]
   help       this text
 
 Vault resolution (all commands): --vault > config in cwd > ~/.starlight/memory/vault.json
@@ -388,6 +417,7 @@ const cfgFlag = (() => { const i = rest.indexOf('--config'); return i >= 0 ? res
       if (rest[0] === 'gateway') { const { main } = await import('../src/mcp/cloud-gateway.mjs'); await main(); return; }
       if (rest[0] === 'export-cloud') { await cmdExportCloud(null, rest.slice(1)); return; }
       return die('usage: starlight-memory mcp <serve|gateway|export-cloud> [--vault <path>] [--embeddings auto|on|off]');
+    case 'import': return cmdImport(rest);
     case 'register': return cmdRegister(rest);
     case 'init': return cmdRegister(rest);
     case 'help': case undefined: case '--help': case '-h': return help();

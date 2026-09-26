@@ -8,3 +8,4 @@ dist/
 eval/*-scorecard.json
 eval/*-scorecard.md
 .asph-wip/
+.import-staging/

@@ -1,0 +1,795 @@
+{
+  "ranAt": "2026-09-26T14:45:54.075Z",
+  "method": "recall@5 = share of labelled atoms in the top 5; MRR = 1/rank of the first labelled atom in the top 10 (0 if absent); rankers are HybridIndex.searchLexical (bm25) and HybridIndex.recall (hybrid RRF, MiniLM summary embeddings)",
+  "caveat": "main-set labels come from the vault, so on vault+staged a staged atom can only displace a label: the main-set delta measures dilution, never gain. An imported atom that answers equally well counts as a miss. The gap set (labels on staged atoms, prompts the vault could not answer) measures gain.",
+  "corpus": {
+    "vaultAtoms": 274,
+    "stagedAtoms": 518
+  },
+  "set": {
+    "queries": 38,
+    "human": 34,
+    "dispatched": 4,
+    "labels": 54,
+    "gapQueries": 5,
+    "location": "private: ~/.starlight/memory-evals/recall/ (real prompts; not in this public repo)"
+  },
+  "results": {
+    "bm25": {
+      "baseline": {
+        "queries": 38,
+        "recall@5": 0.64,
+        "MRR": 0.598,
+        "hit@10": 0.868,
+        "buildMs": 0,
+        "perQuery": {
+          "q01": {
+            "recall5": 1,
+            "rank": 3
+          },
+          "q02": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q03": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q04": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q05": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q06": {
+            "recall5": 1,
+            "rank": 3
+          },
+          "q07": {
+            "recall5": 0,
+            "rank": 9
+          },
+          "q08": {
+            "recall5": 0.5,
+            "rank": 1
+          },
+          "q09": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q10": {
+            "recall5": 0,
+            "rank": 6
+          },
+          "q11": {
+            "recall5": 0,
+            "rank": 6
+          },
+          "q12": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q13": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q14": {
+            "recall5": 1,
+            "rank": 3
+          },
+          "q15": {
+            "recall5": 0.3333333333333333,
+            "rank": 1
+          },
+          "q16": {
+            "recall5": 0,
+            "rank": 6
+          },
+          "q17": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q18": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q19": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q20": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q21": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q22": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q23": {
+            "recall5": 1,
+            "rank": 2
+          },
+          "q24": {
+            "recall5": 1,
+            "rank": 2
+          },
+          "q25": {
+            "recall5": 0,
+            "rank": 8
+          },
+          "q26": {
+            "recall5": 0,
+            "rank": 7
+          },
+          "q27": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q28": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q29": {
+            "recall5": 1,
+            "rank": 5
+          },
+          "q30": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q31": {
+            "recall5": 0,
+            "rank": 7
+          },
+          "q32": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q33": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q34": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q35": {
+            "recall5": 0.5,
+            "rank": 2
+          },
+          "q36": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q37": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q38": {
+            "recall5": 1,
+            "rank": 1
+          }
+        }
+      },
+      "withImports": {
+        "queries": 38,
+        "recall@5": 0.548,
+        "MRR": 0.471,
+        "hit@10": 0.737,
+        "buildMs": 0,
+        "perQuery": {
+          "q01": {
+            "recall5": 1,
+            "rank": 2
+          },
+          "q02": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q03": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q04": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q05": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q06": {
+            "recall5": 0,
+            "rank": 7
+          },
+          "q07": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q08": {
+            "recall5": 0.5,
+            "rank": 2
+          },
+          "q09": {
+            "recall5": 1,
+            "rank": 3
+          },
+          "q10": {
+            "recall5": 0.5,
+            "rank": 4
+          },
+          "q11": {
+            "recall5": 0,
+            "rank": 9
+          },
+          "q12": {
+            "recall5": 1,
+            "rank": 2
+          },
+          "q13": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q14": {
+            "recall5": 0.5,
+            "rank": 4
+          },
+          "q15": {
+            "recall5": 0.3333333333333333,
+            "rank": 1
+          },
+          "q16": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q17": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q18": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q19": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q20": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q21": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q22": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q23": {
+            "recall5": 1,
+            "rank": 3
+          },
+          "q24": {
+            "recall5": 1,
+            "rank": 2
+          },
+          "q25": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q26": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q27": {
+            "recall5": 0.5,
+            "rank": 1
+          },
+          "q28": {
+            "recall5": 1,
+            "rank": 2
+          },
+          "q29": {
+            "recall5": 0,
+            "rank": 9
+          },
+          "q30": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q31": {
+            "recall5": 0,
+            "rank": 9
+          },
+          "q32": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q33": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q34": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q35": {
+            "recall5": 0.5,
+            "rank": 4
+          },
+          "q36": {
+            "recall5": 1,
+            "rank": 2
+          },
+          "q37": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q38": {
+            "recall5": 1,
+            "rank": 1
+          }
+        }
+      },
+      "delta": {
+        "recall@5": -0.092,
+        "MRR": -0.127
+      },
+      "gap": {
+        "baseline": {
+          "queries": 5,
+          "recall@5": 0,
+          "MRR": 0,
+          "hit@10": 0,
+          "buildMs": 0,
+          "perQuery": {
+            "g01": {
+              "recall5": 0,
+              "rank": null
+            },
+            "g02": {
+              "recall5": 0,
+              "rank": null
+            },
+            "g03": {
+              "recall5": 0,
+              "rank": null
+            },
+            "g04": {
+              "recall5": 0,
+              "rank": null
+            },
+            "g05": {
+              "recall5": 0,
+              "rank": null
+            }
+          }
+        },
+        "withImports": {
+          "queries": 5,
+          "recall@5": 0.6,
+          "MRR": 0.29,
+          "hit@10": 0.6,
+          "buildMs": 0,
+          "perQuery": {
+            "g01": {
+              "recall5": 0,
+              "rank": null
+            },
+            "g02": {
+              "recall5": 1,
+              "rank": 5
+            },
+            "g03": {
+              "recall5": 1,
+              "rank": 4
+            },
+            "g04": {
+              "recall5": 1,
+              "rank": 1
+            },
+            "g05": {
+              "recall5": 0,
+              "rank": null
+            }
+          }
+        }
+      }
+    },
+    "hybrid": {
+      "baseline": {
+        "queries": 38,
+        "recall@5": 0.807,
+        "MRR": 0.703,
+        "hit@10": 0.895,
+        "buildMs": 4738,
+        "perQuery": {
+          "q01": {
+            "recall5": 1,
+            "rank": 2
+          },
+          "q02": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q03": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q04": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q05": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q06": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q07": {
+            "recall5": 0.5,
+            "rank": 4
+          },
+          "q08": {
+            "recall5": 1,
+            "rank": 3
+          },
+          "q09": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q10": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q11": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q12": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q13": {
+            "recall5": 1,
+            "rank": 4
+          },
+          "q14": {
+            "recall5": 1,
+            "rank": 3
+          },
+          "q15": {
+            "recall5": 0.6666666666666666,
+            "rank": 1
+          },
+          "q16": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q17": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q18": {
+            "recall5": 1,
+            "rank": 3
+          },
+          "q19": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q20": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q21": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q22": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q23": {
+            "recall5": 0,
+            "rank": 8
+          },
+          "q24": {
+            "recall5": 1,
+            "rank": 2
+          },
+          "q25": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q26": {
+            "recall5": 0.5,
+            "rank": 3
+          },
+          "q27": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q28": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q29": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q30": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q31": {
+            "recall5": 1,
+            "rank": 4
+          },
+          "q32": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q33": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q34": {
+            "recall5": 0.5,
+            "rank": 2
+          },
+          "q35": {
+            "recall5": 0.5,
+            "rank": 1
+          },
+          "q36": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q37": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q38": {
+            "recall5": 1,
+            "rank": 1
+          }
+        }
+      },
+      "withImports": {
+        "queries": 38,
+        "recall@5": 0.706,
+        "MRR": 0.585,
+        "hit@10": 0.816,
+        "buildMs": 37679,
+        "perQuery": {
+          "q01": {
+            "recall5": 1,
+            "rank": 3
+          },
+          "q02": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q03": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q04": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q05": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q06": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q07": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q08": {
+            "recall5": 1,
+            "rank": 3
+          },
+          "q09": {
+            "recall5": 1,
+            "rank": 3
+          },
+          "q10": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q11": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q12": {
+            "recall5": 1,
+            "rank": 2
+          },
+          "q13": {
+            "recall5": 0,
+            "rank": 6
+          },
+          "q14": {
+            "recall5": 1,
+            "rank": 3
+          },
+          "q15": {
+            "recall5": 0.3333333333333333,
+            "rank": 1
+          },
+          "q16": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q17": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q18": {
+            "recall5": 1,
+            "rank": 5
+          },
+          "q19": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q20": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q21": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q22": {
+            "recall5": 1,
+            "rank": 5
+          },
+          "q23": {
+            "recall5": 0,
+            "rank": 7
+          },
+          "q24": {
+            "recall5": 1,
+            "rank": 2
+          },
+          "q25": {
+            "recall5": 0.5,
+            "rank": 1
+          },
+          "q26": {
+            "recall5": 0.5,
+            "rank": 5
+          },
+          "q27": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q28": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q29": {
+            "recall5": 1,
+            "rank": 2
+          },
+          "q30": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q31": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q32": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q33": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q34": {
+            "recall5": 0,
+            "rank": null
+          },
+          "q35": {
+            "recall5": 0.5,
+            "rank": 1
+          },
+          "q36": {
+            "recall5": 1,
+            "rank": 2
+          },
+          "q37": {
+            "recall5": 1,
+            "rank": 1
+          },
+          "q38": {
+            "recall5": 1,
+            "rank": 1
+          }
+        }
+      },
+      "delta": {
+        "recall@5": -0.101,
+        "MRR": -0.118
+      },
+      "gap": {
+        "baseline": {
+          "queries": 5,
+          "recall@5": 0,
+          "MRR": 0,
+          "hit@10": 0,
+          "buildMs": 288,
+          "perQuery": {
+            "g01": {
+              "recall5": 0,
+              "rank": null
+            },
+            "g02": {
+              "recall5": 0,
+              "rank": null
+            },
+            "g03": {
+              "recall5": 0,
+              "rank": null
+            },
+            "g04": {
+              "recall5": 0,
+              "rank": null
+            },
+            "g05": {
+              "recall5": 0,
+              "rank": null
+            }
+          }
+        },
+        "withImports": {
+          "queries": 5,
+          "recall@5": 0.7,
+          "MRR": 0.507,
+          "hit@10": 0.8,
+          "buildMs": 271,
+          "perQuery": {
+            "g01": {
+              "recall5": 0,
+              "rank": null
+            },
+            "g02": {
+              "recall5": 1,
+              "rank": 1
+            },
+            "g03": {
+              "recall5": 1,
+              "rank": 3
+            },
+            "g04": {
+              "recall5": 1,
+              "rank": 1
+            },
+            "g05": {
+              "recall5": 0.5,
+              "rank": 5
+            }
+          }
+        }
+      }
+    }
+  }
+}
