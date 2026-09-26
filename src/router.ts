@@ -54,6 +54,14 @@ export function routeMemoryRecord(record: SISMemoryRecord, policy: TenantMemoryP
     });
   }
 
+  if (policy.verbatim_recall) {
+    routes.push({
+      provider: "mempalace",
+      mode: "derived_local_write",
+      reason: "Local verbatim recall requested; MemPalace holds drawers, SIS keeps memory_id",
+    });
+  }
+
   if (policy.default_cloud_memory) {
     routes.push({
       provider: policy.default_cloud_memory,

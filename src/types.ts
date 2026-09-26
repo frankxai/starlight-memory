@@ -4,6 +4,7 @@ export type ProviderName =
   | "openviking"
   | "byterover"
   | "mem0"
+  | "mempalace"
   | "hindsight"
   | "graphiti"
   | "honcho"
@@ -99,6 +100,8 @@ export interface TenantMemoryPolicy {
   developer_cli_memory?: boolean;
   knowledge_browsing?: boolean;
   local_compositional_recall?: boolean;
+  /** Mirror verbatim session text into a local MemPalace for "what was said" recall. */
+  verbatim_recall?: boolean;
   allow_regulated_external_mirror?: boolean;
 }
 

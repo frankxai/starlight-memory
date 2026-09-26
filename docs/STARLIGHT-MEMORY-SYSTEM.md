@@ -13,7 +13,7 @@ cross-agent, cross-device memory experience by default.
    hybrid BM25 + embedding index. Owns `memory_id`, provenance, privacy class,
    retention, and trust. Never delegated. (MIT, public.)
 2. **Observatory — the adapter registry.** A curated, evidence-tagged catalog of
-   adoptable memory systems (Hindsight, Honcho, Mem0, Zep, Letta, cognee, …), each
+   adoptable memory systems (Hindsight, Honcho, Mem0, MemPalace, Zep, Letta, cognee, …), each
    with license, install path, cost, privacy posture, cross-device, theory-of-mind,
    and benchmark. Lives in `tools/memory-observatory.mjs` (`REGISTRY`) and the
    `MemoryProvider` adapters in `src/`. This is the public "which memory system
@@ -40,7 +40,8 @@ node eval/provider-recall.mjs --live      # with provider keys in env
 ```
 
 **Default stack (sovereign creator):** `local_core` authority → Hindsight (or Zep, if
-sovereignty/budget outweigh the SOTA claim) recall accelerator → Honcho peer layer
+sovereignty/budget outweigh the SOTA claim) recall accelerator → MemPalace local
+verbatim layer ("what was said"; `verbatim_recall`) → Honcho peer layer
 (opt-in; AGPL-3.0 caveat) → Mem0 cheap mirror. **Evaluation decides the default** —
 the `--live` scorecard, not the leaderboard claims, settles it.
 
