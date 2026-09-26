@@ -46,6 +46,15 @@ export const DEFAULT_PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities>
     per_agent_instance_allowed: false,
     notes: "Use as a remote/batched extraction API behind SIS. Do not spawn local Mem0 runtimes per terminal.",
   },
+  mempalace: {
+    provider: "mempalace",
+    process_model: "shared_daemon",
+    authority: "accelerator",
+    ram_profile: "medium",
+    supports_batching: true,
+    per_agent_instance_allowed: false,
+    notes: "Local verbatim recall (wings/rooms/drawers over Chroma or another local backend). One MemPalace MCP server per machine behind the SIS gateway; never one palace writer per harness hook.",
+  },
   hindsight: {
     provider: "hindsight",
     process_model: "shared_daemon_or_remote_api",

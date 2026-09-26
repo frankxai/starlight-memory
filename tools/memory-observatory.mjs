@@ -15,7 +15,7 @@
  * eval before treating any default as settled — "evaluation decides defaults").
  */
 
-/** @typedef {'authority'|'recall-accelerator'|'peer-modeling'|'cloud-mirror'|'kg-recall'|'agent-runtime'} Role */
+/** @typedef {'authority'|'recall-accelerator'|'verbatim-recall'|'peer-modeling'|'cloud-mirror'|'kg-recall'|'agent-runtime'} Role */
 
 export const REGISTRY = [
   {
@@ -43,8 +43,17 @@ export const REGISTRY = [
     id: "mem0", name: "Mem0", license: "Apache-2.0", role: "cloud-mirror",
     install: "pip / API", cost: "OSS free; cloud paid", ram_gb: 1,
     self_hostable: true, cross_device: "service", theory_of_mind: "partial",
-    recall: "vector + extraction", benchmark: "competitive on LOCOMO (vendor claim)",
-    sovereignty: 3, adapter: "yes", notes: "Lightweight redacted cloud fact mirror. Already integrated.",
+    recall: "single-pass ADD-only extraction + entity linking + multi-signal retrieval (Apr-2026 algorithm)",
+    benchmark: "competitive: LoCoMo 92.5 / LongMemEval 94.4 / BEAM-10M 48.6 at ~7K tokens per query (vendor claim, open harness mem0ai/memory-benchmarks)",
+    sovereignty: 3, adapter: "yes", notes: "Extracted-fact layer: dedup, profile facts, token-efficient recall. Redacted mirror only; OSS path is self-hostable.",
+  },
+  {
+    id: "mempalace", name: "MemPalace", license: "MIT", role: "verbatim-recall",
+    install: "pip install mempalace / claude mcp add mempalace -- python -m mempalace.mcp_server", cost: "free", ram_gb: 2,
+    self_hostable: true, cross_device: "backend-dependent (local Chroma by default)", theory_of_mind: false,
+    recall: "verbatim drawers in wings/rooms + temporal KG triples (SQLite); Chroma default, pgvector/qdrant/milvus optional",
+    benchmark: "disputed: LongMemEval R@5 96.6% raw retrieval (vendor); official scorer gives recall_all@5 0.870 and end-to-end QA 0.668 (independent audits #39, #2387)",
+    sovereignty: 5, adapter: "yes", notes: "Answers 'what was said', not 'what is true'. Single-machine writer; front it with the SIS gateway. Hooks for Claude Code/Codex/Cursor must not each open a writer.",
   },
   {
     id: "zep", name: "Zep / Graphiti", license: "Apache-2.0", role: "kg-recall",
@@ -113,6 +122,7 @@ export function recommend(req) {
     authority: REGISTRY.find((s) => s.role === "authority"),
     recall: byRole("recall-accelerator"),
     peer: req.theoryOfMind ? byRole("peer-modeling") : null,
+    verbatim: byRole("verbatim-recall"),
     mirror: req.budget === "low" ? scored.find((s) => s.role === "cloud-mirror" && /free/.test(s.cost)) : byRole("cloud-mirror"),
     ranked: scored,
   };
@@ -151,6 +161,7 @@ function main() {
     console.log(`Profile: RAM ${req.ram ?? "?"}GB · sovereignty=${req.sovereignty} · privacy=${req.privacy} · cross-device=${req.crossDevice} · theory-of-mind=${req.theoryOfMind} · budget=${req.budget}\n`);
     console.log(`**Authority (always):** ${r.authority.name} — ${r.authority.notes}`);
     if (r.recall) console.log(`**Recall accelerator:** ${r.recall.name}  (score ${r.recall.score}) — ${r.recall.why.join(", ")}`);
+    if (r.verbatim) console.log(`**Verbatim recall (local):** ${r.verbatim.name}  (score ${r.verbatim.score}) — ${r.verbatim.why.join(", ")}`);
     if (r.peer) console.log(`**Peer / theory-of-mind:** ${r.peer.name}  (score ${r.peer.score}) — ${r.peer.why.join(", ")}`);
     if (r.mirror) console.log(`**Cheap mirror (optional):** ${r.mirror.name}  (score ${r.mirror.score})`);
     console.log("\n## Full ranking");

@@ -3,6 +3,7 @@ export * from "./resources.js";
 export * from "./router.js";
 export * from "./local-core-provider.js";
 export * from "./mem0-remote-provider.js";
+export * from "./mempalace-provider.js";
 export * from "./honcho-provider.js";
 export * from "./hindsight-provider.js";
 export * from "./graphiti-projection-provider.js";
